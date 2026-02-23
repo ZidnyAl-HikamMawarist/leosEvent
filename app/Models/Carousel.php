@@ -11,6 +11,9 @@ class Carousel extends Model
 
     protected $fillable = [
         'judul',
+        'deskripsi',
+        'keterangan',
+        'link_url',
         'gambar',
         'status'
     ];

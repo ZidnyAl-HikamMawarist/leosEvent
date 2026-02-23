@@ -24,10 +24,11 @@ class DatabaseSeeder extends Seeder
 
 
         User::create([
-        'name' => 'Admin',
-        'email' => 'admin@gmail.com',
-        'password' => bcrypt('123'),
+            'name' => 'Admin',
+            'email' => 'admin@gmail.com',
+            'password' => bcrypt('123'),
         ]);
 
+        $this->call(SettingSeeder::class);
     }
 }

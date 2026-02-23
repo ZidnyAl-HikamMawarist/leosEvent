@@ -71,6 +71,8 @@ section {
     border-bottom: 1px solid var(--glass-border);
     padding: 1rem 0;
     z-index: 1030;
+    position: relative;
+    /* Add this for top decor backdrop */
 }
 
 .navbar.scrolled {
@@ -146,9 +148,24 @@ section {
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    padding: 2.5rem;
+    padding: 2rem;
     transition: all 0.4s ease;
     height: 100%;
+}
+
+@media (max-width: 768px) {
+    .premium-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
 }
 
 .premium-card:hover {

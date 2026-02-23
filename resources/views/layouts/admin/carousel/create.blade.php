@@ -10,8 +10,16 @@
                 <form action="{{ route('carousel.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label text-secondary small fw-bold">JUDUL (Opsional)</label>
-                        <input type="text" name="judul" class="form-control" placeholder="Masukan judul carousel">
+                        <label class="form-label text-secondary small fw-bold">KETERANGAN </label>
+                        <textarea name="keterangan" class="form-control" rows="3"
+                            placeholder="Masukan keterangan promo/lomba..."></textarea>
+                        <small class="text-muted">Muncul di bawah tombol slide.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">LINK CTA (Opsional)</label>
+                        <input type="text" name="link_url" class="form-control"
+                            placeholder="Contoh: /pendaftaran atau https://...">
                     </div>
 
                     <div class="mb-3">

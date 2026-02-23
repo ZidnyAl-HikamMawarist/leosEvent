@@ -22,8 +22,11 @@ class CarouselController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'judul' => 'nullable|string',
-            'gambar' => 'required|image|mimes:jpg,png,jpeg|max:2048',
+            'judul' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+            'link_url' => 'nullable|string',
+            'gambar' => 'required|image|mimes:jpg,png,jpeg|max:5120',
         ]);
 
         $data['gambar'] = $request->file('gambar')->store('carousel', 'public');
@@ -34,8 +37,43 @@ class CarouselController extends Controller
             ->with('success', 'Carousel berhasil ditambahkan');
     }
 
+    public function edit(Carousel $carousel)
+    {
+        return view('layouts.admin.carousel.edit', compact('carousel'));
+    }
+
+    public function update(Request $request, Carousel $carousel)
+    {
+        $data = $request->validate([
+            'judul' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+            'link_url' => 'nullable|string',
+            'gambar' => 'nullable|image|mimes:jpg,png,jpeg|max:5120',
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            // Delete old image
+            if (file_exists(storage_path('app/public/' . $carousel->gambar))) {
+                unlink(storage_path('app/public/' . $carousel->gambar));
+            }
+            $data['gambar'] = $request->file('gambar')->store('carousel', 'public');
+        } else {
+            unset($data['gambar']);
+        }
+
+        $carousel->update($data);
+
+        return redirect()->route('carousel.index')
+            ->with('success', 'Carousel berhasil diperbarui');
+    }
+
     public function destroy(Carousel $carousel)
     {
+        // Delete image
+        if (file_exists(storage_path('app/public/' . $carousel->gambar))) {
+            unlink(storage_path('app/public/' . $carousel->gambar));
+        }
         $carousel->delete();
         return back()->with('success', 'Carousel dihapus');
     }

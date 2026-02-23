@@ -22,13 +22,20 @@
                             <img src="{{ asset('storage/' . $item->gambar) }}" class="card-img-top"
                                 style="height: 150px; object-fit: cover;">
                             <div class="card-body">
-                                <h6 class="fw-bold">{{ $item->judul }}</h6>
-                                <p class="text-muted small mb-3 text-truncate">{{ $item->deskripsi }}</p>
+                                <h6 class="fw-bold text-primary">Slide {{ $loop->iteration }}</h6>
+                                <p class="text-muted small mb-3"
+                                    style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 3em;">
+                                    {{ $item->keterangan ?? 'Tanpa keterangan' }}
+                                </p>
                                 <div class="badge {{ $item->status == 'aktif' ? 'bg-success' : 'bg-danger' }} mb-3">
                                     {{ ucfirst($item->status) }}
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <form action="{{ route('carousel.destroy', $item->id) }}" method="POST" class="w-100"
+                                    <a href="{{ route('carousel.edit', $item->id) }}"
+                                        class="btn btn-outline-warning btn-sm flex-grow-1">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <form action="{{ route('carousel.destroy', $item->id) }}" method="POST" class="flex-grow-1"
                                         onsubmit="return confirm('Hapus slide ini?')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-outline-danger btn-sm w-100">

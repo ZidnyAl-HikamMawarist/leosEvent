@@ -11,13 +11,28 @@ class Lomba extends Model
 
     protected $fillable = [
         'nama_lomba',
+        'slug',
         'kategori',
         'tanggal_pelaksanaan',
         'tingkat',
         'deskripsi',
         'poster',
-        'status'
+        'status',
+        'event_year',
+        'event_start',
+        'event_end',
+        'is_save_the_date_active',
+        'harga_tiket',
+        'lokasi',
+        'juklak_juknis_link',
+        'juara_1',
+        'juara_2',
+        'juara_3',
+        'tipe_lomba',
+        'whatsapp_panitia'
     ];
+
+
 
     public function pendaftarans()
     {

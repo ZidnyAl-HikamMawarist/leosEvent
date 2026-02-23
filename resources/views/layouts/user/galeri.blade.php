@@ -1,7 +1,7 @@
 <section id="galeri" class="py-5 overflow-hidden">
     <div class="container py-5">
         <div class="text-center mb-5" data-aos="fade-up">
-            <div class="section-tag mb-4 shadow-sm">
+            <div class="section-tag mb-4 shadow-sm text-white">
                 📸 Visual Journey
             </div>
             <h2 class="display-4 fw-bold text-white font-secondary">Event <span class="text-gradient">Highlights</span>

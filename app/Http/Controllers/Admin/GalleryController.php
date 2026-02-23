@@ -36,6 +36,9 @@ class GalleryController extends Controller
 
     public function destroy(Galeri $galeri)
     {
+        if ($galeri->gambar && file_exists(storage_path('app/public/' . $galeri->gambar))) {
+            unlink(storage_path('app/public/' . $galeri->gambar));
+        }
         $galeri->delete();
         return back()->with('success', 'Foto galeri dihapus');
     }

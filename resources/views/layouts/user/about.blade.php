@@ -37,7 +37,7 @@
             </div>
             <div class="col-lg-6" data-aos="fade-left">
                 <div class="ps-lg-5">
-                    <div class="section-tag mb-4 shadow-sm">
+                    <div class="section-tag mb-4 shadow-sm text-white">
                         ✨ Discover Our Mission
                     </div>
                     <h2 class="display-4 fw-bold text-white mb-4 font-secondary">

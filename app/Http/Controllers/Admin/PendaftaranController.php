@@ -11,16 +11,54 @@ class PendaftaranController extends Controller
 {
     public function index(Request $request)
     {
+        $search = $request->query('search');
+        $lomba_id = $request->query('lomba_id');
+
         $query = Pendaftaran::with('lomba');
 
-        if ($request->has('lomba_id') && $request->lomba_id != '') {
-            $query->where('lomba_id', $request->lomba_id);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->orWhere('sekolah', 'LIKE', "%{$search}%");
+            });
         }
 
-        $pendaftarans = $query->latest()->get();
+        if ($lomba_id != '') {
+            $query->where('lomba_id', $lomba_id);
+        }
+
+        $pendaftarans = $query->latest()->paginate(15);
         $lombas = Lomba::all();
 
-        return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas'));
+        return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas', 'search', 'lomba_id'));
+    }
+
+    public function edit($id)
+    {
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $lombas = Lomba::all();
+        return view('layouts.admin.pendaftaran.edit', compact('pendaftaran', 'lombas'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'no_wa' => 'required|string|max:20',
+            'sekolah' => 'required|string|max:255',
+            'lomba_id' => 'required|exists:lombas,id',
+            'nama_pembina' => 'nullable|string|max:255',
+            'no_hp_pembina' => 'nullable|string|max:20',
+            'metode_pembayaran' => 'required|in:transfer,tunai',
+            'status' => 'required|in:pending,confirmed,rejected',
+        ]);
+
+        $pendaftaran = Pendaftaran::findOrFail($id);
+        $pendaftaran->update($request->all());
+
+        return redirect()->route('admin.pendaftaran.index')->with('success', 'Data pendaftar berhasil diperbarui');
     }
 
     public function destroy($id)
@@ -57,14 +95,25 @@ class PendaftaranController extends Controller
             "Expires" => "0"
         ];
 
-        $columns = array('Nama', 'Sekolah', 'Mata Lomba', 'Tanggal Daftar');
+        $columns = array('Nama', 'Email', 'No. WhatsApp', 'Sekolah', 'Mata Lomba', 'Tipe', 'Pembina', 'No. HP Pembina', 'Pembayaran', 'Tanggal Daftar');
 
         $callback = function () use ($data, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
             foreach ($data as $item) {
-                fputcsv($file, array($item->nama, $item->sekolah, $item->lomba->nama_lomba, $item->created_at->format('d M Y')));
+                fputcsv($file, array(
+                    $item->nama,
+                    $item->email,
+                    $item->no_wa,
+                    $item->sekolah,
+                    $item->lomba->nama_lomba ?? 'N/A',
+                    ucfirst($item->lomba->tipe_lomba ?? '-'),
+                    $item->nama_pembina ?? '-',
+                    $item->no_hp_pembina ?? '-',
+                    strtoupper($item->metode_pembayaran),
+                    $item->created_at->format('d M Y')
+                ));
             }
 
             fclose($file);

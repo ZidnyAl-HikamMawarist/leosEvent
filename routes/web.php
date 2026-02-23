@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\TimelineController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\PendaftaranController;
-
+use App\Http\Controllers\LombaDetailController;
 /*
 |--------------------------------------------------------------------------
 | USER ROUTES (PUBLIC)
@@ -36,6 +36,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('admin.dashboard');
 
+    Route::get('/lomba/check-name', [LombaController::class, 'checkName'])->name('admin.lomba.checkName');
     Route::resource('lomba', LombaController::class);
     Route::resource('carousel', CarouselController::class);
     Route::resource('galeri', GalleryController::class);
@@ -43,6 +44,8 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::resource('faq', FaqController::class);
 
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('admin.pendaftaran.index');
+    Route::get('/pendaftaran/{id}/edit', [PendaftaranController::class, 'edit'])->name('admin.pendaftaran.edit');
+    Route::put('/pendaftaran/{id}', [PendaftaranController::class, 'update'])->name('admin.pendaftaran.update');
     Route::delete('/pendaftaran/{id}', [PendaftaranController::class, 'destroy'])->name('admin.pendaftaran.destroy');
     Route::get('/pendaftaran/export', [PendaftaranController::class, 'export'])->name('admin.pendaftaran.export');
 
@@ -56,3 +59,11 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/auth.php';
+
+
+/*
+|--------------------------------------------------------------------------
+| AUTH DETAIL ROUTE ()
+|--------------------------------------------------------------------------
+*/
+Route::get('/lomba/{lomba:slug}', [LombaDetailController::class, 'show'])->name('lomba.detail');

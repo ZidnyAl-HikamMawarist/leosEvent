@@ -4,7 +4,7 @@
     <div class="container py-5 position-relative">
         <div class="row align-items-center mb-5">
             <div class="col-lg-6" data-aos="fade-right">
-                <div class="section-tag mb-4 shadow-sm">
+                <div class="section-tag mb-4 shadow-sm text-white">
                     ❓ Support Portal
                 </div>
                 <h2 class="display-4 fw-bold text-white font-secondary mb-4">Frequently Asked <span
