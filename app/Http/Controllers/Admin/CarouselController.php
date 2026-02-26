@@ -10,8 +10,9 @@ class CarouselController extends Controller
 {
     public function index()
     {
+        $maxAllowed = \App\Models\Lomba::where('status', 'aktif')->count();
         $carousels = Carousel::latest()->get();
-        return view('layouts.admin.carousel.index', compact('carousels'));
+        return view('layouts.admin.carousel.index', compact('carousels', 'maxAllowed'));
     }
 
     public function create()
@@ -28,6 +29,11 @@ class CarouselController extends Controller
             'link_url' => 'nullable|string',
             'gambar' => 'required|image|mimes:jpg,png,jpeg|max:5120',
         ]);
+
+        $maxAllowed = \App\Models\Lomba::where('status', 'aktif')->count();
+        if (Carousel::count() >= $maxAllowed) {
+            return back()->with('error', "Maksimal kapasitas Carousel adalah {$maxAllowed} (sesuai jumlah lomba aktif). Harap hapus carousel lama jika ingin menambah yang baru.");
+        }
 
         $data['gambar'] = $request->file('gambar')->store('carousel', 'public');
 

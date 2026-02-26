@@ -18,7 +18,7 @@ use App\Http\Controllers\LombaDetailController;
 */
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/about', [PageController::class, 'about'])->name('about');
-Route::get('/timeline', [PageController::class, 'timeline'])->name('timeline');
+// Route::get('/timeline', [PageController::class, 'timeline'])->name('timeline');
 Route::get('/lomba', [PageController::class, 'lomba'])->name('lomba');
 Route::get('/galeri', [PageController::class, 'galeri'])->name('galeri');
 Route::get('/pendaftaran', [PageController::class, 'pendaftaran'])->name('pendaftaran');
@@ -40,7 +40,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::resource('lomba', LombaController::class);
     Route::resource('carousel', CarouselController::class);
     Route::resource('galeri', GalleryController::class);
-    Route::resource('timeline', TimelineController::class);
+    // Route::resource('timeline', TimelineController::class);
     Route::resource('faq', FaqController::class);
 
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('admin.pendaftaran.index');
@@ -49,8 +49,16 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::delete('/pendaftaran/{id}', [PendaftaranController::class, 'destroy'])->name('admin.pendaftaran.destroy');
     Route::get('/pendaftaran/export', [PendaftaranController::class, 'export'])->name('admin.pendaftaran.export');
 
+    // Dynamic Settings Routes
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');
     Route::post('/settings', [SettingController::class, 'update'])->name('admin.settings.update');
+
+    Route::get('/settings/about', [SettingController::class, 'about'])->name('admin.settings.about');
+    Route::get('/settings/pendaftaran', [SettingController::class, 'pendaftaran'])->name('admin.settings.pendaftaran');
+    Route::get('/settings/galeri', [SettingController::class, 'galeri'])->name('admin.settings.galeri');
+    Route::get('/settings/informasi', [SettingController::class, 'informasi'])->name('admin.settings.informasi');
+    Route::get('/settings/hero', [SettingController::class, 'hero'])->name('admin.settings.hero');
+    Route::get('/settings/process', [SettingController::class, 'processFlow'])->name('admin.settings.process');
 });
 
 /*

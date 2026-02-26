@@ -172,6 +172,8 @@
         .sidebar {
             width: 260px;
             height: calc(100vh - 40px);
+            /* Fallback */
+            height: calc(100dvh - 40px);
             position: fixed;
             left: 20px;
             top: 20px;
@@ -187,28 +189,27 @@
         }
 
         .sidebar-header {
-            height: 100px;
+            height: 60px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 16px;
-            letter-spacing: 1px;
             border-bottom: 1px solid var(--border-color);
             position: relative;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            color: var(--primary);
         }
 
         .sidebar-header i {
-            font-size: 32px;
-            margin-bottom: 5px;
+            font-size: 28px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .sidebar-menu {
-            padding: 25px 15px;
+            padding: 15px 10px;
             flex: 1;
             overflow-y: auto;
         }
@@ -216,15 +217,15 @@
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
-            border-radius: 14px;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 12px;
             color: var(--text-muted);
             text-decoration: none;
             transition: all 0.3s ease;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .sidebar-menu a:hover {
@@ -237,6 +238,46 @@
             background: var(--primary);
             color: var(--text-on-primary);
             box-shadow: 0 8px 16px var(--primary-glow);
+        }
+
+        .submenu {
+            padding-left: 15px;
+            display: none;
+        }
+
+        .submenu.show {
+            display: block;
+        }
+
+        .submenu a {
+            padding: 8px 15px 8px 40px;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .submenu a.active {
+            background: rgba(var(--primary-rgb, 113, 47, 35), 0.1);
+            color: var(--primary);
+            box-shadow: none;
+            border-left: 3px solid var(--primary);
+            border-radius: 0 14px 14px 0;
+        }
+
+        .sidebar-menu [data-bs-toggle="collapse"] {
+            position: relative;
+        }
+
+        .sidebar-menu [data-bs-toggle="collapse"]::after {
+            content: "\F282";
+            font-family: "bootstrap-icons";
+            position: absolute;
+            right: 18px;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .sidebar-menu [data-bs-toggle="collapse"]:not(.collapsed)::after {
+            transform: rotate(180deg);
         }
 
         .sidebar-footer {
@@ -292,7 +333,8 @@
         }
 
         /* Theme Toggle Button */
-        .theme-toggle, .mobile-btn {
+        .theme-toggle,
+        .mobile-btn {
             background: var(--sidebar-hover);
             border: 1px solid var(--border-color);
             color: var(--text-main);
@@ -306,7 +348,8 @@
             transition: all 0.3s ease;
         }
 
-        .theme-toggle:hover, .mobile-btn:hover {
+        .theme-toggle:hover,
+        .mobile-btn:hover {
             background: var(--primary);
             color: white;
             transform: scale(1.05);
@@ -411,6 +454,8 @@
                 left: 10px;
                 top: 10px;
                 height: calc(100vh - 20px);
+                /* Fallback */
+                height: calc(100dvh - 20px);
                 width: 80px;
             }
 
@@ -452,30 +497,38 @@
                 width: 260px;
                 z-index: 1050;
             }
+
             .sidebar.active {
                 transform: translateX(0);
                 left: 10px;
                 top: 10px;
                 height: calc(100vh - 20px);
+                /* Fallback */
+                height: calc(100dvh - 20px);
             }
+
             .sidebar-header span,
             .sidebar-menu a span,
             .sidebar-footer span {
                 display: inline;
             }
+
             .sidebar-menu a {
                 justify-content: flex-start;
                 padding: 12px 18px;
             }
+
             .topbar {
                 left: 10px;
                 right: 10px;
                 top: 10px;
             }
+
             .content {
                 margin-left: 0;
                 padding: 100px 10px 30px 10px;
             }
+
             .mobile-btn {
                 display: flex !important;
             }
@@ -491,7 +544,6 @@
     {{-- SIDEBAR --}}
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <i class="bi bi-speedometer2"></i>
             <span>ADMIN PANEL</span>
             <button class="btn btn-close d-md-none position-absolute end-0 me-3" id="close-sidebar"></button>
         </div>
@@ -505,18 +557,17 @@
                 <i class="bi bi-collection"></i>
                 <span>Carousel</span>
             </a>
-            <a href="{{ url('admin/timeline') }}" class="{{ request()->is('admin/timeline*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-event"></i>
-                <span>Timeline</span>
-            </a>
+
             <a href="{{ url('admin/lomba') }}" class="{{ request()->is('admin/lomba*') ? 'active' : '' }}">
                 <i class="bi bi-trophy"></i>
                 <span>Lomba</span>
             </a>
+
             <a href="{{ url('admin/galeri') }}" class="{{ request()->is('admin/galeri*') ? 'active' : '' }}">
                 <i class="bi bi-image"></i>
                 <span>Galeri</span>
             </a>
+
             <a href="{{ url('admin/faq') }}" class="{{ request()->is('admin/faq*') ? 'active' : '' }}">
                 <i class="bi bi-question-circle"></i>
                 <span>FAQ</span>
@@ -525,10 +576,45 @@
                 <i class="bi bi-person-check"></i>
                 <span>Pendaftar</span>
             </a>
-            <a href="{{ url('admin/settings') }}" class="{{ request()->is('admin/settings') ? 'active' : '' }}">
+
+            <!-- Settings Dropdown -->
+            <a href="#settingsSubmenu"
+                class="{{ request()->is('admin/settings*') ? 'active' : '' }} {{ request()->is('admin/settings*') ? '' : 'collapsed' }}"
+                data-bs-toggle="collapse" role="button"
+                aria-expanded="{{ request()->is('admin/settings*') ? 'true' : 'false' }}">
                 <i class="bi bi-gear"></i>
                 <span>Settings</span>
             </a>
+            <div class="collapse submenu {{ request()->is('admin/settings*') ? 'show' : '' }}" id="settingsSubmenu">
+                <a href="{{ route('admin.settings') }}"
+                    class="{{ request()->routeIs('admin.settings') ? 'active' : '' }}">
+                    <i class="bi bi-sliders"></i> Umum & Tema
+                </a>
+                <a href="{{ route('admin.settings.about') }}"
+                    class="{{ request()->routeIs('admin.settings.about') ? 'active' : '' }}">
+                    <i class="bi bi-info-circle"></i> Teks About
+                </a>
+                <a href="{{ route('admin.settings.pendaftaran') }}"
+                    class="{{ request()->routeIs('admin.settings.pendaftaran') ? 'active' : '' }}">
+                    <i class="bi bi-pencil-square"></i> Teks Pendaftaran
+                </a>
+                <a href="{{ route('admin.settings.galeri') }}"
+                    class="{{ request()->routeIs('admin.settings.galeri') ? 'active' : '' }}">
+                    <i class="bi bi-images"></i> Teks Galeri
+                </a>
+                <a href="{{ route('admin.settings.hero') }}"
+                    class="{{ request()->routeIs('admin.settings.hero') ? 'active' : '' }}">
+                    <i class="bi bi-megaphone"></i> Hero & Promo
+                </a>
+                <a href="{{ route('admin.settings.informasi') }}"
+                    class="{{ request()->routeIs('admin.settings.informasi') ? 'active' : '' }}">
+                    <i class="bi bi-card-text"></i> FAQ & Lomba
+                </a>
+                <a href="{{ route('admin.settings.process') }}"
+                    class="{{ request()->routeIs('admin.settings.process') ? 'active' : '' }}">
+                    <i class="bi bi-arrow-repeat"></i> Process Flow
+                </a>
+            </div>
         </div>
 
         <div class="sidebar-footer">
@@ -550,7 +636,7 @@
             </button>
             <h5 class="topbar-title">@yield('title', 'Admin Panel')</h5>
         </div>
-        
+
         <div class="d-flex align-items-center gap-3">
             <div class="text-end d-none d-sm-block">
                 <div class="fw-bold small">{{ auth()->user()->name }}</div>
@@ -607,7 +693,7 @@
         function toggleSidebar() {
             sidebar.classList.toggle('active');
             overlay.classList.toggle('show');
-            if(sidebar.classList.contains('active')) {
+            if (sidebar.classList.contains('active')) {
                 document.body.style.overflow = 'hidden';
             } else {
                 document.body.style.overflow = '';
@@ -617,6 +703,27 @@
         openSidebarBtn.addEventListener('click', toggleSidebar);
         closeSidebarBtn.addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', toggleSidebar);
+
+        // Sidebar Scroll Persistence
+        const sidebarMenu = document.querySelector('.sidebar-menu');
+        if (sidebarMenu) {
+            // Restore scroll position
+            const savedScrollPos = localStorage.getItem('sidebar-scroll');
+            if (savedScrollPos) {
+                sidebarMenu.scrollTop = savedScrollPos;
+            }
+
+            // Save scroll position on scroll
+            sidebarMenu.addEventListener('scroll', () => {
+                localStorage.setItem('sidebar-scroll', sidebarMenu.scrollTop);
+            });
+
+            // Auto-scroll to active link if it's not visible
+            const activeLink = sidebarMenu.querySelector('a.active');
+            if (activeLink) {
+                activeLink.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+            }
+        }
     </script>
 </body>
 

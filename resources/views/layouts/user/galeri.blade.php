@@ -2,12 +2,13 @@
     <div class="container py-5">
         <div class="text-center mb-5" data-aos="fade-up">
             <div class="section-tag mb-4 shadow-sm text-white">
-                📸 Visual Journey
+                {{ $setting->galeri_tag ?? '📸 Visual Journey' }}
             </div>
-            <h2 class="display-4 fw-bold text-white font-secondary">Event <span class="text-gradient">Highlights</span>
+            <h2 class="display-4 fw-bold text-white font-secondary">
+                {{ $setting->galeri_title ?? 'Event Highlights' }}
             </h2>
             <p class="text-muted fs-5 mx-auto" style="max-width: 600px;">
-                Relive the most memorable moments from our previous sessions and special gatherings.
+                {{ $setting->galeri_subtitle ?? 'Relive the most memorable moments from our previous sessions and special gatherings.' }}
             </p>
         </div>
 
@@ -20,9 +21,8 @@
 
                         <div class="galeri-overlay">
                             <div class="overlay-content w-100">
-                                <span class="badge bg-primary rounded-pill mb-2 px-3">Moment</span>
-                                <h5 class="text-white fw-bold mb-0">Captured Excellence</h5>
-                                <p class="text-white-50 small mb-0">Event Atmosphere</p>
+                                <span class="badge bg-primary rounded-pill mb-2 px-3">Highlight</span>
+                                <h5 class="text-white fw-bold mb-0">{{ $g->judul }}</h5>
                             </div>
                             <div class="zoom-icon-btn ms-auto">
                                 <i class="bi bi-fullscreen text-white fs-5"></i>

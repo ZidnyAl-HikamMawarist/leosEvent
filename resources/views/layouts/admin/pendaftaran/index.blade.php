@@ -11,9 +11,10 @@
                         class="btn btn-success btn-sm">
                         <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
                     </a>
-                    <button onclick="window.print()" class="btn btn-danger btn-sm">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> Print / PDF
-                    </button>
+                    <a href="{{ route('admin.pendaftaran.export', ['type' => 'pdf', 'lomba_id' => request('lomba_id')]) }}"
+                        class="btn btn-danger btn-sm">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                    </a>
                 </div>
             </div>
 

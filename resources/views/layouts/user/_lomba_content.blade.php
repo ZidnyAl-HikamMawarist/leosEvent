@@ -1,5 +1,5 @@
-<section id="lomba" class="py-5 position-relative overflow-hidden">
-    <div class="container py-5">
+<section id="lomba" class="pt-0 pb-5 position-relative overflow-hidden">
+    <div class="container pt-0 pb-5">
         <div class="text-center mb-5" data-aos="fade-up">
 
             <div class="d-flex justify-content-center mb-5" data-aos="fade-up">
@@ -13,13 +13,14 @@
                 </div>
             </div>
             <div class="section-tag mb-4 shadow-sm mx-auto d-inline-block text-white">
-                🏆 Active Competitions
+                {{ $setting->lomba_tag ?? '🏆 Active Competitions' }}
             </div>
-            <h2 class="display-4 fw-bold text-white font-secondary mb-3">Unleash Your <span
-                    class="text-gradient">Potential</span></h2>
+            <h2 class="display-4 fw-bold text-white font-secondary mb-3">
+                {{ $setting->lomba_title ?? 'Unleash Your Potential' }}
+            </h2>
             <div class="divider-gradient mx-auto mb-4" style="width: 100px; height: 4px; border-radius: 2px;"></div>
             <p class="text-muted fs-5 mx-auto" style="max-width: 600px;">
-                Choose your field of excellence and compete with the best minds in the industry.
+                {{ $setting->lomba_subtitle ?? 'Choose your field of excellence and compete with the best minds in the industry.' }}
             </p>
         </div>
 
@@ -45,7 +46,7 @@
                                     {{ $l->nama_lomba }}
                                 </h6>
                             </a>
-                            <p class="text-white-50 small mb-4" style="font-size: 0.85rem;">{{ $l->kategori }}</p>
+
 
                             <div class="mt-auto">
                                 <a href="{{ route('pendaftaran', ['lomba_id' => $l->id]) }}"

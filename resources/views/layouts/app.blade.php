@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id" class="scroll-smooth" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $setting->nama_event ?? 'LEOS EVENT' }} | Premier Experience</title>
+    <title>
+        @yield('title'){{ isset($__env->getSections()['title']) ? ' | ' : '' }}{{ $setting->nama_event ?? 'LEOS EVENT' }}
+    </title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -288,9 +290,7 @@
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ route('home') }}#about">About</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('home') }}#timeline">Schedule</a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ route('home') }}#galeri">Gallery</a>
                     </li>
@@ -329,31 +329,45 @@
                         {{ $setting->nama_event ?? 'LEOS EVENT' }}
                     </h3>
                     <p class="text-muted mb-4 fs-5" style="max-width: 400px;">
-                        Redefining the standard of excellence in event experiences. Join us for a journey of innovation
-                        and connection.
+                        {{ $setting->deskripsi_event ?? 'Redefining the standard of excellence in event experiences. Join us for a journey of innovation and connection.' }}
                     </p>
                     <div class="social-links d-flex gap-3">
-                        <a href="#" class="social-icon-btn"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="social-icon-btn"><i class="bi bi-twitter-x"></i></a>
-                        <a href="#" class="social-icon-btn"><i class="bi bi-linkedin"></i></a>
+                        @if($setting && $setting->footer_ig_link)
+                            <a href="{{ $setting->footer_ig_link }}" target="_blank" class="social-icon-btn"><i
+                                    class="bi bi-instagram"></i></a>
+                        @endif
+                        <!-- Additional social links can be added here if needed in the future -->
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4">
                     <h6 class="text-white fw-bold mb-4">Quick Links</h6>
                     <ul class="list-unstyled footer-links">
                         <li class="mb-2"><a href="#about" class="text-muted text-decoration-none">About</a></li>
-                        <li class="mb-2"><a href="#timeline" class="text-muted text-decoration-none">Schedule</a></li>
+
                         <li class="mb-2"><a href="#faq" class="text-muted text-decoration-none">F.A.Q</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-5 col-md-8">
-                    <h6 class="text-white fw-bold mb-4">Newsletter</h6>
-                    <p class="text-muted mb-4 text-xs">Stay updated with our latest news and event announcements.</p>
-                    <div class="input-group mb-3 glass-input-group">
-                        <input type="text" class="form-control bg-transparent border-secondary text-white"
-                            placeholder="Email address">
-                        <button class="btn btn-primary" type="button">Subscribe</button>
-                    </div>
+                    <h6 class="text-white fw-bold mb-4">Location Map</h6>
+                    @if($setting && $setting->footer_map_link)
+                        <style>
+                            .map-container iframe {
+                                width: 100% !important;
+                                height: 100% !important;
+                                border: 0 !important;
+                            }
+                        </style>
+                        <div class="map-container rounded overflow-hidden shadow-sm" style="height: 150px;">
+                            @if(\Illuminate\Support\Str::contains($setting->footer_map_link, '<iframe'))
+                                {!! $setting->footer_map_link !!}
+                            @else
+                                <iframe src="{{ $setting->footer_map_link }}" allowfullscreen="" loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            @endif
+                        </div>
+                    @else
+                        <p class="text-muted mb-4 text-xs">Peta lokasi belum di atur di menu pengaturan admin.</p>
+                    @endif
                 </div>
             </div>
             <hr class="my-5 border-secondary border-opacity-10">
@@ -364,8 +378,8 @@
                     </p>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-                    <p class="text-muted mb-0 small">Handcrafted by <span class="text-primary font-bold">Leos
-                            Digital</span></p>
+                    <p class="text-muted mb-0 small">Handcrafted by <span class="text-primary font-bold"> Zidny</span>
+                    </p>
                 </div>
             </div>
             @if($setting && $setting->footer_image)

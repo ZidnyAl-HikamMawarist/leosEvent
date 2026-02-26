@@ -5,12 +5,13 @@
         <div class="row align-items-center mb-5">
             <div class="col-lg-6" data-aos="fade-right">
                 <div class="section-tag mb-4 shadow-sm text-white">
-                    ❓ Support Portal
+                    {{ $setting->faq_tag ?? '❓ Support Portal' }}
                 </div>
-                <h2 class="display-4 fw-bold text-white font-secondary mb-4">Frequently Asked <span
-                        class="text-gradient">Questions</span></h2>
+                <h2 class="display-4 fw-bold text-white font-secondary mb-4">
+                    {{ $setting->faq_title ?? 'Frequently Asked Questions' }}
+                </h2>
                 <p class="text-muted fs-5 mb-5" style="max-width: 500px;">
-                    Have questions? We've compiled a list of the most common inquiries to help you get started quickly.
+                    {{ $setting->faq_subtitle ?? 'Have questions? We\'ve compiled a list of the most common inquiries to help you get started quickly.' }}
                 </p>
                 <div class="d-flex align-items-center gap-4 text-white-50">
                     <div class="d-flex align-items-center gap-2">
@@ -62,14 +63,22 @@
             </div>
         </div>
 
-        <!-- Support CTA -->
-        <div class="mt-5 text-center p-5 rounded-5 bg-glass border border-white border-opacity-10 shadow-lg"
-            data-aos="zoom-in" data-aos-delay="300">
-            <h4 class="text-white fw-bold mb-3">Still have questions?</h4>
-            <p class="text-muted mb-4 fs-5">Our dedicated support team is ready to help you with any inquiries.</p>
-            <a href="#kontak" class="btn btn-outline-custom rounded-pill px-5 hover-lift">
-                Contact Support Team <i class="bi bi-chat-dots ms-2"></i>
-            </a>
-        </div>
+        @if($setting && $setting->kontak)
+            @php
+                $wa = $setting->kontak;
+                $formattedWa = preg_replace('/^0/', '62', preg_replace('/[^\d]/', '', trim($wa)));
+                if (!str_starts_with($formattedWa, '62') && !empty($formattedWa))
+                    $formattedWa = '62' . $formattedWa;
+                $waLink = !empty($formattedWa) ? "https://api.whatsapp.com/send?phone={$formattedWa}&text=Halo%20Panitia%20" . urlencode($setting->nama_event ?? 'Leos Event') . ",%20saya%20ingin%20bertanya..." : "#";
+            @endphp
+            <div class="mt-5 text-center p-5 rounded-5 bg-glass border border-white border-opacity-10 shadow-lg"
+                data-aos="zoom-in" data-aos-delay="300">
+                <h4 class="text-white fw-bold mb-3">Still have questions?</h4>
+                <p class="text-muted mb-4 fs-5">Our dedicated support team is ready to help you with any inquiries.</p>
+                <a href="{{ $waLink }}" target="_blank" class="btn btn-outline-custom rounded-pill px-5 hover-lift">
+                    Contact Support Team <i class="bi bi-whatsapp ms-2"></i>
+                </a>
+            </div>
+        @endif
     </div>
 </section>

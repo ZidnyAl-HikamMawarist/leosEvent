@@ -24,8 +24,12 @@
                                         <i class="bi bi-calendar-event fs-4"></i>
                                     </div>
                                     <div>
-                                        <h6 class="mb-0 fw-bold">Live Experiences</h6>
-                                        <p class="small mb-0 text-white-50">Physical & Virtual Access</p>
+                                        <h6 class="mb-0 fw-bold">
+                                            {{ $setting->about_experience_label ?? 'Live Experiences' }}
+                                        </h6>
+                                        <p class="small mb-0 text-white-50">
+                                            {{ $setting->about_experience_sublabel ?? 'Physical & Virtual Access' }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -38,10 +42,10 @@
             <div class="col-lg-6" data-aos="fade-left">
                 <div class="ps-lg-5">
                     <div class="section-tag mb-4 shadow-sm text-white">
-                        ✨ Discover Our Mission
+                        {{ $setting->about_tag ?? '✨ Discover Our Mission' }}
                     </div>
-                    <h2 class="display-4 fw-bold text-white mb-4 font-secondary">
-                        Experience the <span class="text-gradient">Evolution</span> of Professional Growth
+                    <h2 class="display-4 fw-bold text-white mb-4">
+                        {{ $setting->about_title ?? 'Experience the Evolution of Professional Growth' }}
                     </h2>
                     <p class="text-muted fs-5 mb-5 leading-relaxed">
                         {{ $setting->deskripsi_event ?? 'Join us for an immersive experience that transcends traditional events. We focus on bridging the gap between today\'s innovations and tomorrow\'s potential through expert talks and hands-on networking.' }}
@@ -52,11 +56,14 @@
                             <div class="d-flex align-items-start gap-3">
                                 <div
                                     class="icon-box bg-primary bg-opacity-10 text-primary p-3 rounded-4 border border-primary border-opacity-10">
-                                    <i class="bi bi-person-badge fs-4"></i>
+                                    <i class="bi {{ $setting->about_feature1_icon ?? 'bi-person-badge' }} fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="text-white fw-bold mb-1">Global Speakers</h6>
-                                    <p class="small text-muted mb-0">Learn from world-class industry pioneers.</p>
+                                    <h6 class="text-white fw-bold mb-1">
+                                        {{ $setting->about_feature1_title ?? 'Global Speakers' }}</h6>
+                                    <p class="small text-muted mb-0">
+                                        {{ $setting->about_feature1_desc ?? 'Learn from world-class industry pioneers.' }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -64,11 +71,14 @@
                             <div class="d-flex align-items-start gap-3">
                                 <div
                                     class="icon-box bg-secondary bg-opacity-10 text-secondary p-3 rounded-4 border border-secondary border-opacity-10">
-                                    <i class="bi bi-people fs-4"></i>
+                                    <i class="bi {{ $setting->about_feature2_icon ?? 'bi-people' }} fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="text-white fw-bold mb-1">Elite Networking</h6>
-                                    <p class="small text-muted mb-0">Connect with influential professionals.</p>
+                                    <h6 class="text-white fw-bold mb-1">
+                                        {{ $setting->about_feature2_title ?? 'Elite Networking' }}</h6>
+                                    <p class="small text-muted mb-0">
+                                        {{ $setting->about_feature2_desc ?? 'Connect with influential professionals.' }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -76,11 +86,14 @@
                             <div class="d-flex align-items-start gap-3">
                                 <div
                                     class="icon-box bg-accent bg-opacity-10 text-accent p-3 rounded-4 border border-accent border-opacity-10">
-                                    <i class="bi bi-cpu fs-4"></i>
+                                    <i class="bi {{ $setting->about_feature3_icon ?? 'bi-cpu' }} fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="text-white fw-bold mb-1">Modern Workshops</h6>
-                                    <p class="small text-muted mb-0">Hands-on learning with latest tools.</p>
+                                    <h6 class="text-white fw-bold mb-1">
+                                        {{ $setting->about_feature3_title ?? 'Modern Workshops' }}</h6>
+                                    <p class="small text-muted mb-0">
+                                        {{ $setting->about_feature3_desc ?? 'Hands-on learning with latest tools.' }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -88,11 +101,13 @@
                             <div class="d-flex align-items-start gap-3">
                                 <div
                                     class="icon-box bg-warning bg-opacity-10 text-warning p-3 rounded-4 border border-warning border-opacity-10">
-                                    <i class="bi bi-patch-check fs-4"></i>
+                                    <i class="bi {{ $setting->about_feature4_icon ?? 'bi-patch-check' }} fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="text-white fw-bold mb-1">Verified Certificate</h6>
-                                    <p class="small text-muted mb-0">Boost your professional portfolio.</p>
+                                    <h6 class="text-white fw-bold mb-1">
+                                        {{ $setting->about_feature4_title ?? 'Verified Certificate' }}</h6>
+                                    <p class="small text-muted mb-0">
+                                        {{ $setting->about_feature4_desc ?? 'Boost your professional portfolio.' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -100,7 +115,8 @@
 
                     <a href="{{ route('pendaftaran') }}"
                         class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 hover-lift shadow-sm">
-                        Start Your Journey <i class="bi bi-chevron-right ms-2 small"></i>
+                        {{ $setting->about_btn_text ?? 'Start Your Journey' }} <i
+                            class="bi bi-chevron-right ms-2 small"></i>
                     </a>
                 </div>
             </div>

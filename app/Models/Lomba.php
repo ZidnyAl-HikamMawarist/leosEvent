@@ -29,7 +29,8 @@ class Lomba extends Model
         'juara_2',
         'juara_3',
         'tipe_lomba',
-        'whatsapp_panitia'
+        'whatsapp_panitia',
+        'link_grup_wa'
     ];
 
 

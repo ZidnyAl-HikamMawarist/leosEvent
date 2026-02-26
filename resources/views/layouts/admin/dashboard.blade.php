@@ -5,7 +5,6 @@
     <div class="page-header mb-4">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="mb-2">Dashboard Admin</h1>
                 <p class="text-muted mb-0">Selamat datang kembali, <strong>{{ auth()->user()->name }}</strong></p>
             </div>
             <div class="text-end">
@@ -84,74 +83,28 @@
     {{-- Main Content Grid --}}
     <div class="row g-4">
         {{-- Chart Section --}}
-        <div class="col-lg-7">
+        <div class="col-12">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="fw-bold mb-0">
                             <i class="bi bi-person-lines-fill text-primary me-2"></i>Statistik Pendaftar Lomba
                         </h5>
-                        <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm" id="chartType" onchange="changeType()"
-                                style="width: 100px;">
-                                <option value="bar">Bar</option>
-                                <option value="line">Line</option>
-                            </select>
-                        </div>
                     </div>
-                    <!-- Mengatur tinggi chart agar lebih kecil (height: 250px) -->
-                    <div style="position: relative; height: 250px;">
+                    <!-- Mengatur tinggi chart agar lebih nyaman dibaca saat lebar -->
+                    <div style="position: relative; height: 185px;">
                         <canvas id="lombaChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-
-
-
-        {{-- Top Lombas Section --}}
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-4">
-                        <i class="bi bi-star-fill text-warning me-2"></i>Top Lomba
-                    </h5>
-                    @if($topLombas->count() > 0)
-                        <div class="top-items-list">
-                            @foreach($topLombas as $index => $lomba)
-                                <div
-                                    class="top-item d-flex align-items-center mb-3 pb-3 
-                                                                                                                                                                                    {{ $loop->last ? '' : 'border-bottom' }}">
-                                    <div class="rank-badge me-3">
-                                        {{ $index + 1 }}
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1 fw-semibold">{{ Str::limit($lomba->nama_lomba, 25) }}</h6>
-                                        <small class="text-muted">
-                                            <i class="bi bi-person-check me-1"></i>{{ $lomba->pendaftarans_count }} pendaftar
-                                        </small>
-                                    </div>
-                                    <span class="badge bg-{{ $lomba->status == 'aktif' ? 'success' : 'secondary' }}">
-                                        {{ ucfirst($lomba->status) }}
-                                    </span>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-4 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            <small>Belum ada lomba</small>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
     </div>
 
-    {{-- Recent Registrations --}}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
+    {{-- Bottom Grid (Recent Registrations & Top Lombas) --}}
+    <div class="row mt-5 g-4">
+        {{-- Recent Registrations --}}
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-4">
                         <i class="bi bi-clock-history text-primary me-2"></i>Pendaftar Terbaru
@@ -191,6 +144,43 @@
                         <div class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                             <small>Belum ada pendaftar</small>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Top Lombas Section --}}
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Top Lomba
+                    </h5>
+                    @if($topLombas->count() > 0)
+                        <div class="top-items-list">
+                            @foreach($topLombas as $index => $lomba)
+                                <div class="top-item d-flex align-items-center mb-3 pb-3 {{ $loop->last ? '' : 'border-bottom' }}">
+                                    <div class="rank-badge me-3">
+                                        {{ $index + 1 }}
+                                    </div>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <h6 class="mb-1 fw-semibold text-truncate" title="{{ $lomba->nama_lomba }}">
+                                            {{ $lomba->nama_lomba }}</h6>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person-check me-1"></i>{{ $lomba->pendaftarans_count }} pendaftar
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-{{ $lomba->status == 'aktif' ? 'success' : 'secondary' }} ms-2">
+                                        {{ ucfirst($lomba->status) }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            <small>Belum ada lomba</small>
                         </div>
                     @endif
                 </div>
@@ -308,15 +298,14 @@
         // Data dari Laravel
         const labels = {!! json_encode($chartLabels) !!};
         const dataValues = {!! json_encode($chartData) !!};
-        let currentType = 'bar';
 
-        function renderChart(type) {
+        function renderChart() {
             if (lombaChart) {
                 lombaChart.destroy();
             }
 
             lombaChart = new Chart(ctx, {
-                type: type,
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
@@ -325,9 +314,7 @@
                         backgroundColor: 'rgba(59, 130, 246, 0.7)',
                         borderColor: 'rgb(59, 130, 246)',
                         borderWidth: 2,
-                        borderRadius: 5,
-                        tension: 0.4,
-                        fill: type === 'line'
+                        borderRadius: 5
                     }]
                 },
                 options: {
@@ -339,6 +326,9 @@
                         },
                         tooltip: {
                             callbacks: {
+                                title: function (context) {
+                                    return labels[context[0].dataIndex]; // Menampilkan nama lomba full saat di-hover
+                                },
                                 label: function (context) {
                                     return context.parsed.y + ' Peserta';
                                 }
@@ -359,6 +349,21 @@
                         x: {
                             grid: {
                                 display: false
+                            },
+                            ticks: {
+                                maxRotation: 0, // Mencegah teks nyerong/miring
+                                minRotation: 0,
+                                font: {
+                                    size: 11
+                                },
+                                callback: function (value) {
+                                    let label = this.getLabelForValue(value);
+                                    // Potong teks jika kepanjangan (di atas 12 huruf) dan tambah titik-titik
+                                    if (label && label.length > 12) {
+                                        return label.substring(0, 12) + '...';
+                                    }
+                                    return label;
+                                }
                             }
                         }
                     }
@@ -366,12 +371,7 @@
             });
         }
 
-        function changeType() {
-            currentType = document.getElementById('chartType').value;
-            renderChart(currentType);
-        }
-
-        renderChart(currentType);
+        renderChart();
     </script>
 
 @endsection

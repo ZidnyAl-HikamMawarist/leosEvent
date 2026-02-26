@@ -81,8 +81,9 @@ class PendaftaranController extends Controller
         $data = $query->latest()->get();
 
         if ($type == 'pdf') {
-            // Simple PDF logic or just return a view for printing
-            return view('layouts.admin.pendaftaran.export_pdf', compact('data'));
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('layouts.admin.pendaftaran.export_pdf', compact('data'))
+                ->setPaper('a4', 'landscape');
+            return $pdf->download("pendaftar_" . date('Y-m-d') . ".pdf");
         }
 
         // CSV/Excel logic

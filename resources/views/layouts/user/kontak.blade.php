@@ -74,9 +74,15 @@
                                             </div>
                                             <h4 class="text-white fw-bold mb-2">Live WhatsApp</h4>
                                             <p class="text-muted small mb-4">Chat with our representative.</p>
-                                            <a href="https://wa.me/{{ $setting->kontak_wa ?? '6281234567890' }}"
+                                            @php
+                                                $wa = $setting->kontak ?? '6281234567890';
+                                                $formattedWa = preg_replace('/^0/', '62', preg_replace('/[^\d]/', '', trim($wa)));
+                                                if (!str_starts_with($formattedWa, '62') && !empty($formattedWa))
+                                                    $formattedWa = '62' . $formattedWa;
+                                            @endphp
+                                            <a href="https://api.whatsapp.com/send?phone={{ $formattedWa }}"
                                                 class="btn btn-primary-custom rounded-pill w-100">
-                                                +{{ $setting->kontak_wa ?? '62 812 3456 7890' }}
+                                                +{{ $wa }}
                                             </a>
                                         </div>
                                     </div>

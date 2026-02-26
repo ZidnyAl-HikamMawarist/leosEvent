@@ -12,9 +12,10 @@ class LombaController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search');
-        $lombas = Lomba::when($search, function ($query, $search) {
-            return $query->where('nama_lomba', 'LIKE', "%{$search}%");
-        })
+        $lombas = Lomba::withCount('pendaftarans')
+            ->when($search, function ($query, $search) {
+                return $query->where('nama_lomba', 'LIKE', "%{$search}%");
+            })
             ->latest()
             ->paginate(10);
 
@@ -41,8 +42,6 @@ class LombaController extends Controller
     {
         $data = $request->validate([
             'nama_lomba' => 'required|string|max:255',
-            'kategori' => 'required',
-            'tingkat' => 'required',
             'tanggal_pelaksanaan' => 'required|date',
             'deskripsi' => 'required',
             'poster' => 'required|image|mimes:jpg,png,jpeg|max:2048',
@@ -54,11 +53,14 @@ class LombaController extends Controller
             'event_end' => 'nullable|date_format:H:i',
             'is_save_the_date_active' => 'nullable|boolean',
             'tipe_lomba' => 'required|in:solo,kelompok',
-            'whatsapp_panitia' => 'nullable|string'
+            'whatsapp_panitia' => 'nullable|string',
+            'link_grup_wa' => 'nullable|url'
         ]);
 
         $data['slug'] = Str::slug($request->nama_lomba) . '-' . Str::random(5);
         $data['status'] = 'aktif';
+        $data['kategori'] = 'Akademik';
+        $data['tingkat'] = 'SMP';
 
         if ($request->hasFile('poster')) {
             $data['poster'] = $request->file('poster')->store('lomba', 'public');
@@ -78,8 +80,6 @@ class LombaController extends Controller
     {
         $data = $request->validate([
             'nama_lomba' => 'required|string|max:255',
-            'kategori' => 'required',
-            'tingkat' => 'required',
             'tanggal_pelaksanaan' => 'required|date',
             'deskripsi' => 'required',
             'status' => 'required|in:aktif,nonaktif',
@@ -95,12 +95,15 @@ class LombaController extends Controller
             'juara_2' => 'nullable|string|max:255',
             'juara_3' => 'nullable|string|max:255',
             'tipe_lomba' => 'required|in:solo,kelompok',
-            'whatsapp_panitia' => 'nullable|string'
+            'whatsapp_panitia' => 'nullable|string',
+            'link_grup_wa' => 'nullable|url'
         ]);
 
         if ($lomba->nama_lomba !== $request->nama_lomba) {
             $data['slug'] = Str::slug($request->nama_lomba) . '-' . Str::random(5);
         }
+        $data['kategori'] = 'Akademik';
+        $data['tingkat'] = 'SMP';
 
         if ($request->hasFile('poster')) {
             if ($lomba->poster && \Illuminate\Support\Facades\Storage::exists('public/' . $lomba->poster)) {

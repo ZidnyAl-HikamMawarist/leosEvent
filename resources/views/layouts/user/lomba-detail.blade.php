@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', $lomba->nama_lomba)
+
 @section('content')
     <div class="container py-5" style="margin-top: 100px;">
 

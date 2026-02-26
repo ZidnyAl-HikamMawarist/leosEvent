@@ -1,78 +1,75 @@
 @extends('layouts.admin.layout')
-@section('title', 'Timeline Event')
+
+@section('title', 'Manajemen Timeline')
 
 @section('content')
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between mb-3 align-items-center">
-                <h5 class="fw-bold m-0">Timeline Event</h5>
-                <a href="{{ route('timeline.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus"></i> Tambah Timeline
-                </a>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Daftar Timeline Event</h4>
+        <a href="{{ route('timeline.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i> Tambah Agenda
+        </a>
+    </div>
 
-            @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
-            @endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
                         <tr>
-                            <th width="40">No</th>
-                            <th>Judul</th>
+                            <th class="ps-4" style="width: 80px;">Urutan</th>
+                            <th>Agenda</th>
                             <th>Tanggal</th>
+                            <th>Deskripsi</th>
                             <th>Status</th>
-                            <th width="200">Aksi</th>
+                            <th class="text-end pe-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($timelines as $item)
+                        @forelse($timelines as $item)
                             <tr>
-                                <td>{{ $item->urutan }}</td>
-                                <td>{{ $item->judul }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                                <td>
-                                    @if($item->status == 'aktif')
-                                        <span class="badge bg-success">Aktif</span>
-                                    @else
-                                        <span class="badge bg-danger">Nonaktif</span>
-                                    @endif
+                                <td class="ps-4">
+                                    <span class="badge bg-secondary rounded-pill">{{ $item->urutan }}</span>
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-light btn-sm rounded-circle" type="button"
-                                            data-bs-toggle="dropdown">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                            <li>
-                                                <a class="dropdown-item py-2" href="{{ route('timeline.edit', $item->id) }}">
-                                                    <i class="bi bi-pencil me-2 text-warning"></i> Edit
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider opacity-50">
-                                            </li>
-                                            <li>
-                                                <form action="{{ route('timeline.destroy', $item->id) }}" method="POST"
-                                                    class="d-inline" onsubmit="return confirm('Hapus timeline ini?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="dropdown-item py-2 text-danger">
-                                                        <i class="bi bi-trash me-2"></i> Hapus
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
+                                    <div class="fw-bold">{{ $item->judul }}</div>
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
+                                <td><small class="text-muted">{{ Str::limit($item->deskripsi, 50) }}</small></td>
+                                <td>
+                                    <span
+                                        class="badge {{ $item->status === 'aktif' ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                                        {{ ucfirst($item->status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{{ route('timeline.edit', $item->id) }}"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('timeline.destroy', $item->id) }}" method="POST"
+                                            onsubmit="return confirm('Hapus agenda ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
-                        @if($timelines->isEmpty())
+                        @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">Belum ada data timeline</td>
+                                <td colspan="6" class="text-center py-5 text-muted"> Belum ada agenda timeline. </td>
                             </tr>
-                        @endif
+                        @endforelse
                     </tbody>
                 </table>
             </div>

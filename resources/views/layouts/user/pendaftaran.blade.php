@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Pendaftaran')
+
 @section('content')
     <section class="py-5 position-relative min-vh-100 d-flex align-items-center overflow-hidden">
 
@@ -11,13 +13,11 @@
                     <div class="registration-info">
                         <div
                             class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-4 border border-primary border-opacity-25 shadow-sm">
-                            <i class="bi bi-person-plus-fill me-2"></i> REGISTRATION OPEN
+                            <i class="bi bi-person-plus-fill me-2"></i> {{ $setting->reg_tag ?? 'REGISTRATION OPEN' }}
                         </div>
-                        <h1 class="display-4 fw-bold text-white mb-4 font-secondary">Begin Your <span
-                                class="text-gradient">Journey</span> With Us.</h1>
+                        <h1 class="display-4 fw-bold text-white mb-4 font-secondary">{{ $setting->reg_title ?? 'Begin Your Journey With Us.' }}</h1>
                         <p class="text-muted fs-5 mb-5">
-                            Secure your place at the premier event of the season. Join industry leaders and visionaries in a
-                            day of innovation.
+                            {{ $setting->reg_subtitle ?? 'Secure your place at the premier event of the season. Join industry leaders and visionaries in a day of innovation.' }}
                         </p>
 
                         <div class="benefit-list">
@@ -26,21 +26,21 @@
                                     class="bg-glass p-2 rounded-3 text-primary border border-white border-opacity-10 shadow-sm">
                                     <i class="bi bi-shield-check fs-4"></i>
                                 </div>
-                                <span class="text-white-50">Secure and fast verification process.</span>
+                                <span class="text-white-50">{{ $setting->reg_feature_1 ?? 'Secure and fast verification process.' }}</span>
                             </div>
                             <div class="d-flex align-items-center gap-3 mb-4">
                                 <div
                                     class="bg-glass p-2 rounded-3 text-secondary border border-white border-opacity-10 shadow-sm">
                                     <i class="bi bi-envelope-paper fs-4"></i>
                                 </div>
-                                <span class="text-white-50">Instant confirmation via email.</span>
+                                <span class="text-white-50">{{ $setting->reg_feature_2 ?? 'Instant confirmation via email.' }}</span>
                             </div>
                             <div class="d-flex align-items-center gap-3">
                                 <div
                                     class="bg-glass p-2 rounded-3 text-accent border border-white border-opacity-10 shadow-sm">
                                     <i class="bi bi-headset fs-4"></i>
                                 </div>
-                                <span class="text-white-50">24/7 Priority support for attendees.</span>
+                                <span class="text-white-50">{{ $setting->reg_feature_3 ?? '24/7 Priority support for attendees.' }}</span>
                             </div>
                         </div>
                     </div>
@@ -64,18 +64,13 @@
                                 @endif
                             </div>
 
-                            <h2 class="fw-bold text-white mb-1">Registration Form</h2>
-                            <p class="text-muted">Fill in your details to get started</p>
+                            <h2 class="fw-bold text-white mb-1">{{ $setting->reg_form_title ?? 'Registration Form' }}</h2>
+                            <p class="text-muted">{{ $setting->reg_form_subtitle ?? 'Fill in your details to get started' }}</p>
                         </div>
 
 
 
-                        @if(session('success'))
-                            <div class="alert alert-success border-0 bg-success bg-opacity-20 text-white p-4 rounded-4 mb-4"
-                                data-aos="zoom-in">
-                                <i class="bi bi-check2-circle me-2 fs-4"></i> {{ session('success') }}
-                            </div>
-                        @endif
+
 
                         <form action="{{ route('pendaftaran.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
                             @csrf
@@ -89,6 +84,7 @@
                                             <option value="{{ $l->id }}" 
                                                 data-tipe="{{ $l->tipe_lomba }}" 
                                                 data-wa="{{ $l->whatsapp_panitia }}"
+                                                data-grup="{{ $l->link_grup_wa }}"
                                                 {{ (isset($selectedLomba) && $selectedLomba->id == $l->id) ? 'selected' : '' }} 
                                                 class="bg-white text-dark">
                                                 {{ $l->nama_lomba }} ({{ ucfirst($l->tipe_lomba) }})
@@ -157,15 +153,6 @@
                                 </div>
                             </div>
 
-                            <div class="col-12 mt-4" id="wa_panitia_container" style="display: none;">
-                                <div class="p-4 rounded-4 bg-glass border border-white border-opacity-10 text-center">
-                                    <p class="text-white-50 small mb-3">Untuk konfirmasi & bukti transfer, hubungi panitia:</p>
-                                    <a href="" id="wa_panitia_link" target="_blank" class="btn btn-outline-success rounded-pill px-4">
-                                        <i class="bi bi-whatsapp me-2"></i> Chat Panitia via WhatsApp
-                                    </a>
-                                </div>
-                            </div>
-
                             <div class="col-12 mt-5">
                                 <button type="submit" class="btn btn-primary-custom w-100 py-3 fs-5 rounded-pill shadow-lg">
                                     Daftar Sekarang <i class="bi bi-send-fill ms-2"></i>
@@ -183,24 +170,15 @@
                                 const labelNama = document.getElementById('label_nama');
                                 const labelEmail = document.getElementById('label_email');
                                 const labelNoWa = document.getElementById('label_no_wa');
-                                const waContainer = document.getElementById('wa_panitia_container');
-                                const waLink = document.getElementById('wa_panitia_link');
 
                                 function updateForm() {
                                     const selectedOption = lombaSelect.options[lombaSelect.selectedIndex];
-                                    const paymentSelect = document.getElementById('pembayaran_select');
-                                    const paymentMethod = paymentSelect ? paymentSelect.value : 'transfer';
-
-                                    console.log('Selected Lomba:', selectedOption ? selectedOption.text : 'None');
-                                    console.log('Payment Method:', paymentMethod);
 
                                     if (!selectedOption || selectedOption.value === "") {
-                                        waContainer.style.display = 'none';
                                         return;
                                     }
 
                                     const tipe = selectedOption.getAttribute('data-tipe');
-                                    let wa = selectedOption.getAttribute('data-wa') || '';
 
                                     // Update Labels
                                     if (tipe === 'kelompok') {
@@ -211,19 +189,6 @@
                                         labelNama.innerText = 'Nama Peserta';
                                         labelEmail.innerText = 'Email Peserta';
                                         labelNoWa.innerText = 'No. HP / WhatsApp Peserta';
-                                    }
-
-                                    // Show WA button logic
-                                    if (wa.trim() !== '' && paymentMethod === 'transfer') {
-                                        waContainer.style.display = 'block';
-                                        
-                                        // Format WA number (remove 0 at start, ensure it starts with 62)
-                                        let formattedWa = wa.trim().replace(/^0/, '62').replace(/[^\d]/g, '');
-                                        if (!formattedWa.startsWith('62')) formattedWa = '62' + formattedWa;
-
-                                        waLink.href = `https://api.whatsapp.com/send?phone=${formattedWa}&text=Halo%20Panitia%20Leos%20Event,%20saya%20ingin%20mengirimkan%20bukti%20transfer%20untuk%20pendaftaran%20lomba%20${encodeURIComponent(selectedOption.text)}.`;
-                                    } else {
-                                        waContainer.style.display = 'none';
                                     }
                                 }
 
@@ -281,5 +246,83 @@
             padding: 14px !important;
             font-size: 1rem !important;
         }
+
+        /* Success Modal Styles */
+        #successModal .modal-content {
+            background: rgba(15, 9, 8, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(197, 163, 83, 0.3);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .success-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: rgba(25, 135, 84, 0.1);
+            border: 1px solid rgba(25, 135, 84, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
     </style>
+
+    @if(session('success'))
+        <!-- Premium Success Modal -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-5 p-2">
+                    <div class="modal-header border-0 justify-content-end pb-0">
+                        <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center px-4 px-md-5 pt-0 pb-5">
+                        <div class="success-icon-wrapper mb-4 shadow" data-aos="zoom-in" data-aos-delay="100">
+                            <i class="bi bi-check-lg text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h3 class="fw-bold text-white mb-3 font-secondary" data-aos="fade-up" data-aos-delay="200">Registrasi Berhasil!</h3>
+                        <p class="text-white-50 mb-4" data-aos="fade-up" data-aos-delay="300">{{ session('success') }}</p>
+                        
+                        @if(session('link_grup') || (session('wa_panitia') && session('metode_pembayaran') == 'transfer'))
+                            <div class="bg-black bg-opacity-25 rounded-4 p-4 border border-white border-opacity-10" data-aos="fade-up" data-aos-delay="400">
+                                <p class="text-muted small mb-3">Langkah selanjutnya yang perlu Anda lakukan:</p>
+                                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                                    
+                                    @if(session('link_grup'))
+                                        <a href="{{ session('link_grup') }}" target="_blank" class="btn btn-outline-primary rounded-pill px-4 py-2 fs-6 flex-grow-1">
+                                            <i class="bi bi-people-fill me-2"></i> Grup Lomba
+                                        </a>
+                                    @endif
+
+                                    @if(session('wa_panitia') && session('metode_pembayaran') == 'transfer')
+                                        @php
+                                            $wa = session('wa_panitia');
+                                            $formattedWa = preg_replace('/^0/', '62', preg_replace('/[^\d]/', '', trim($wa)));
+                                            if (!str_starts_with($formattedWa, '62')) $formattedWa = '62' . $formattedWa;
+                                            $encodedLomba = urlencode(session('nama_lomba'));
+                                            $waLink = "https://api.whatsapp.com/send?phone={$formattedWa}&text=Halo%20Panitia%20Leos%20Event,%20saya%20ingin%20mengirimkan%20bukti%20transfer%20untuk%20pendaftaran%20lomba%20{$encodedLomba}.";
+                                        @endphp
+                                        <a href="{{ $waLink }}" target="_blank" class="btn btn-success rounded-pill px-4 py-2 fs-6 flex-grow-1 border-0 shadow" style="background: #25D366;">
+                                            <i class="bi bi-whatsapp me-2"></i> Konfirmasi
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <button type="button" class="btn btn-outline-custom rounded-pill px-5 mt-2" data-bs-dismiss="modal">Tutup</button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var myModal = new bootstrap.Modal(document.getElementById('successModal'), {
+                    keyboard: false
+                });
+                myModal.show();
+            });
+        </script>
+    @endif
 @endsection

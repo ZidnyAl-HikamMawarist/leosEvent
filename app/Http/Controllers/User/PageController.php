@@ -19,12 +19,15 @@ class PageController extends Controller
         // Mengambil tahun dari request, default ke tahun sekarang jika tidak ada
         $selectedYear = $request->get('year', date('Y'));
 
+        $galeriLimit = \App\Models\Setting::first()->galeri_limit ?? 6;
+        $activeLombaCount = Lomba::where('status', 'aktif')->count();
+
         // Opsional: Jika ingin otomatis menampilkan tahun terbaru yang ada di database
         // $selectedYear = $request->get('year', Lomba::max('event_year') ?? date('Y'));
         return view('layouts.user.home', [
-            'carousels' => Carousel::where('status', 'aktif')->get(),
+            'carousels' => Carousel::where('status', 'aktif')->latest()->take($activeLombaCount)->get(),
             'timelines' => Timeline::where('status', 'aktif')->orderBy('tanggal')->get(),
-            'galeris' => Galeri::where('status', 'aktif')->get(),
+            'galeris' => Galeri::where('status', 'aktif')->latest()->take($galeriLimit)->get(),
             'faqs' => Faq::where('status', 'aktif')->get(),
             'lombas' => Lomba::where('status', 'aktif')
                 ->where('event_year', $selectedYear)
@@ -55,7 +58,8 @@ class PageController extends Controller
 
     public function galeri()
     {
-        $galeris = Galeri::where('status', 'aktif')->get();
+        $galeriLimit = \App\Models\Setting::first()->galeri_limit ?? 6;
+        $galeris = Galeri::where('status', 'aktif')->latest()->take($galeriLimit)->get();
         return view('layouts.user.galeri', compact('galeris'));
     }
 
@@ -96,9 +100,16 @@ class PageController extends Controller
 
         $data['status'] = 'pending';
 
-        Pendaftaran::create($data);
+        $pendaftaran = Pendaftaran::create($data);
+        $lomba = Lomba::find($request->lomba_id);
 
-        return redirect()->route('pendaftaran')->with('success', 'Pendaftaran berhasil dikirim! Kami akan menghubungi Anda segera.');
+        return redirect()->route('pendaftaran')->with([
+            'success' => 'Pendaftaran berhasil dikirim! Silakan ikuti instruksi selanjutnya.',
+            'wa_panitia' => $lomba->whatsapp_panitia,
+            'link_grup' => $lomba->link_grup_wa,
+            'metode_pembayaran' => $request->metode_pembayaran,
+            'nama_lomba' => $lomba->nama_lomba
+        ]);
     }
 
     public function faq()

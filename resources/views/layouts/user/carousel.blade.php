@@ -18,7 +18,8 @@
             @endif
         </div>
 
-        <div class="container-fluid px-lg-5 position-relative z-1">
+        <!-- Tambahkan px-0 agar di HP tidak ada ruang kosong di kiri/kanan, tapi tetap ada jarak di laptop (px-lg-5) -->
+        <div class="container-fluid px-2 px-lg-5 position-relative z-1">
             <div id="heroCarousel"
                 class="carousel slide carousel-fade hero-carousel-premium shadow-2xl overflow-hidden rounded-5 hero-carousel-height"
                 data-bs-ride="carousel">
@@ -31,15 +32,19 @@
                             <div class="container h-100 d-flex align-items-center">
                                 <div class="row w-100 align-items-center justify-content-center justify-content-md-start">
                                     <div class="col-lg-10 col-xl-8" data-aos="fade-right">
-                                        {{-- Group Tombol Tetap Di Tengah --}}
-                                        <div class="d-flex flex-column flex-sm-row gap-3">
+                                        {{-- Group Tombol Tetap Di Tengah dengan padding ekstra di HP agar terhindar panah
+                                        carousel --}}
+                                        <div class="d-flex flex-column flex-sm-row gap-3 px-4 px-md-0 ms-3">
                                             <a href="{{ $slide->link_url ?? route('pendaftaran') }}"
-                                                class="btn btn-primary-custom btn-lg rounded-pill px-4 px-md-5 py-3 shadow">
-                                                Join Now <i class="bi bi-arrow-right-circle ms-2"></i>
+                                                class="btn btn-primary-custom rounded-pill px-4 px-md-5 py-2 py-md-3 shadow fw-bold d-flex justify-content-center align-items-center"
+                                                style="font-size: min(1rem, 4vw);">
+                                                {{ $setting->hero_primary_btn_text ?? 'Join Now' }} <i
+                                                    class="bi bi-arrow-right-circle ms-2"></i>
                                             </a>
                                             <a href="#about"
-                                                class="btn btn-outline-custom btn-lg rounded-pill px-4 px-md-5 py-3 glass-effect text-white">
-                                                Learn More
+                                                class="btn btn-outline-custom rounded-pill px-4 px-md-5 py-2 py-md-3 glass-effect text-white fw-bold d-flex justify-content-center align-items-center"
+                                                style="font-size: min(1rem, 4vw);">
+                                                {{ $setting->hero_secondary_btn_text ?? 'Learn More' }}
                                             </a>
                                         </div>
                                     </div>
@@ -92,21 +97,26 @@
                         <div class="col-lg-9" data-aos="fade-up">
                             <div
                                 class="badge bg-secondary bg-opacity-20 text-secondary px-3 py-2 rounded-pill mb-4 border border-secondary border-opacity-30 shadow-sm">
-                                <i class="bi bi-stars me-2 text-accent"></i> THE MOST AWAITED EVENT
+                                <i class="bi bi-stars me-2 text-accent"></i>
+                                {{ $setting->hero_tag ?? 'THE MOST AWAITED EVENT' }}
                             </div>
                             <h1 class="display-2 fw-bold text-white mb-3 mt-2 font-secondary">
-                                <span class="text-gradient">Experience</span> The New Standard
+                                {{ $setting->hero_title ?? 'Experience The New Standard' }}
                             </h1>
                             <p class="text-muted fs-5 mb-5 pe-lg-5" style="color: #e2d1c3 !important;">
                                 {{ $setting->deskripsi_event ?? 'Join thousand of visionaries and industry leaders at the most impactful event of the decade.' }}
                             </p>
-                            <div class="d-flex flex-column flex-sm-row gap-3">
+                            <div class="d-flex flex-column flex-sm-row gap-3 px-4 px-md-0">
                                 <a href="{{ route('pendaftaran') }}"
-                                    class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3">
-                                    Secure Your Spot <i class="bi bi-arrow-right-circle ms-2"></i>
+                                    class="btn btn-primary-custom rounded-pill px-4 px-md-5 py-2 py-md-3 shadow fw-bold d-flex justify-content-center align-items-center"
+                                    style="font-size: min(1rem, 4vw);">
+                                    {{ $setting->hero_primary_btn_text ?? 'Join Now' }} <i
+                                        class="bi bi-arrow-right-circle ms-2"></i>
                                 </a>
-                                <a href="#about" class="btn btn-outline-custom btn-lg rounded-pill px-5 py-3 glass-effect">
-                                    Explore More
+                                <a href="#about"
+                                    class="btn btn-outline-custom rounded-pill px-4 px-md-5 py-2 py-md-3 glass-effect fw-bold d-flex justify-content-center align-items-center"
+                                    style="font-size: min(1rem, 4vw);">
+                                    {{ $setting->hero_secondary_btn_text ?? 'Learn More' }}
                                 </a>
                             </div>
                         </div>
@@ -274,6 +284,22 @@
         .carousel-keterangan-text {
             font-size: 1.1rem !important;
             line-height: 1.4 !important;
+        }
+
+        /* Fix deformed/squished carousel buttons on mobile */
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 15%;
+            /* Increase width so buttons have breathing room */
+        }
+
+        .carousel-control-prev-icon-custom,
+        .carousel-control-next-icon-custom {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            /* Prevent the circle from being squished */
         }
     }
 </style>

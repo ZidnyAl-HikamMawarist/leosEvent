@@ -1,12 +1,13 @@
 @if($setting && $setting->is_save_the_date_active && ($setting->event_status !== 'finished'))
-    <section id="timeline" class="py-5 position-relative overflow-hidden">
-        <div class="container py-5">
+    <section id="timeline" class="pt-5 pb-2 position-relative overflow-hidden">
+        <div class="container pt-5 pb-2">
             <div class="text-center mb-5" data-aos="fade-up">
                 <div class="section-tag mb-4 shadow-sm mx-auto d-inline-block text-white">
-                    🕒 Countdown to Excellence
+                    {{ $setting->countdown_tag ?? '🕒 Countdown to Excellence' }}
                 </div>
-                <h2 class="display-4 fw-bold text-white font-secondary mb-3">Save the <span
-                        class="text-gradient">Date</span>
+                <h2 class="display-4 fw-bold text-white font-secondary mb-3">
+                    {{ $setting->countdown_title ?? 'Save the' }}
+                    <span class="text-gradient">{{ $setting->countdown_subtitle ?? 'Date' }}</span>
                 </h2>
 
                 @if($setting->event_status === 'upcoming' && $setting->event_start)
@@ -44,153 +45,54 @@
                 @endif
             </div>
 @else
-            <section id="timeline" class="py-5 position-relative overflow-hidden">
-                <div class="container py-5">
+            <section id="timeline" class="pt-5 pb-2 position-relative overflow-hidden">
+                <div class="container pt-5 pb-2">
         @endif
 
                 <!-- Process Flow -->
-                <div class="process-flow-wrapper mb-5" data-aos="fade-up">
+                <div class="process-flow-wrapper mb-1 mb-md-2" data-aos="fade-up">
                     <div class="row g-4">
+                        <!-- Step 1 -->
                         <div class="col-md-4">
                             <div class="process-step text-center p-4">
                                 <div class="step-icon mb-4 mx-auto">
-                                    <i class="bi bi-pencil-square fs-1"></i>
+                                    <i class="bi {{ $setting->process_icon1 ?? 'bi-pencil-square' }} fs-1"></i>
                                     <span class="step-num">01</span>
                                 </div>
-                                <h4 class="text-white fw-bold">Pendaftaran</h4>
-                                <p class="text-muted small">Daftarkan diri atau tim Anda secara online melalui form yang
-                                    disediakan.</p>
+                                <h4 class="text-white fw-bold">{{ $setting->process_title1 ?? 'Pendaftaran' }}</h4>
+                                <p class="text-muted small">
+                                    {{ $setting->process_desc1 ?? 'Daftarkan diri atau tim Anda secara online melalui form yang disediakan.' }}
+                                </p>
                             </div>
                         </div>
+                        <!-- Step 2 -->
                         <div class="col-md-4">
                             <div class="process-step text-center p-4">
                                 <div class="step-icon mb-4 mx-auto">
-                                    <i class="bi bi-check2-all fs-1"></i>
+                                    <i class="bi {{ $setting->process_icon2 ?? 'bi-check2-all' }} fs-1"></i>
                                     <span class="step-num">02</span>
                                 </div>
-                                <h4 class="text-white fw-bold">Daftar Ulang</h4>
-                                <p class="text-muted small">Konfirmasi kehadiran dan verifikasi berkas administrative di
-                                    lokasi.
+                                <h4 class="text-white fw-bold">{{ $setting->process_title2 ?? 'Daftar Ulang' }}</h4>
+                                <p class="text-muted small">
+                                    {{ $setting->process_desc2 ?? 'Konfirmasi kehadiran dan verifikasi berkas administrative di lokasi.' }}
                                 </p>
                             </div>
                         </div>
+                        <!-- Step 3 -->
                         <div class="col-md-4">
                             <div class="process-step text-center p-4">
                                 <div class="step-icon mb-4 mx-auto">
-                                    <i class="bi bi-trophy fs-1"></i>
+                                    <i class="bi {{ $setting->process_icon3 ?? 'bi-trophy' }} fs-1"></i>
                                     <span class="step-num">03</span>
                                 </div>
-                                <h4 class="text-white fw-bold">Pelaksanaan Lomba</h4>
-                                <p class="text-muted small">Waktunya menunjukkan kemampuan terbaik Anda dalam kompetisi.
+                                <h4 class="text-white fw-bold">{{ $setting->process_title3 ?? 'Pelaksanaan Lomba' }}
+                                </h4>
+                                <p class="text-muted small">
+                                    {{ $setting->process_desc3 ?? 'Waktunya menunjukkan kemampuan terbaik Anda dalam kompetisi.' }}
                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="text-center mb-5 mt-5 pt-5" data-aos="fade-up">
-                    <h3 class="fw-bold text-white mb-4">Mata Lomba Schedule</h3>
-                </div>
-
-                <div class="accordion accordion-flush bg-glass rounded-4 overflow-hidden border border-white border-opacity-10 mb-5"
-                    id="lombaScheduleAccordion" data-aos="fade-up">
-                    @foreach($lombas as $l)
-                        <div class="accordion-item bg-transparent border-bottom border-white border-opacity-10">
-                            <h2 class="accordion-header" id="headingLomba{{ $l->id }}">
-                                <button class="accordion-button collapsed bg-transparent text-white fw-bold py-4"
-                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseLomba{{ $l->id }}">
-                                    <div class="d-flex align-items-center w-100 me-3 text-start">
-                                        <span
-                                            class="bg-primary bg-opacity-25 text-primary px-3 py-1 rounded-pill small me-3">
-                                            {{ \Carbon\Carbon::parse($l->tanggal_pelaksanaan)->format('d M') }}
-                                        </span>
-                                        <span class="flex-grow-1">{{ $l->nama_lomba }}</span>
-                                        <span class="text-secondary small">
-                                            <i class="bi bi-clock me-1"></i>
-                                            {{ $l->event_start ? \Carbon\Carbon::parse($l->event_start)->format('H:i') : '--:--' }}
-                                            -
-                                            {{ $l->event_end ? \Carbon\Carbon::parse($l->event_end)->format('H:i') : '--:--' }}
-                                        </span>
-                                    </div>
-                                </button>
-                            </h2>
-                            <div id="collapseLomba{{ $l->id }}" class="accordion-collapse collapse"
-                                data-bs-parent="#lombaScheduleAccordion">
-                                <div class="accordion-body text-muted py-4">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-2 mb-3 mb-md-0">
-                                            <img src="{{ asset('storage/' . $l->poster) }}"
-                                                class="img-fluid rounded shadow-sm" style="max-height: 100px;">
-                                        </div>
-                                        <div class="col-md-10 text-start">
-                                            <p class="mb-3">{{ Str::limit($l->deskripsi, 200) }}</p>
-                                            <div class="d-flex flex-wrap gap-4 small text-white-50">
-                                                <div><i
-                                                        class="bi bi-geo-alt text-secondary me-2"></i>{{ $l->lokasi ?? 'TBA' }}
-                                                </div>
-                                                <div><i class="bi bi-people text-secondary me-2"></i>{{ $l->tingkat }}</div>
-                                                @if($l->harga_tiket > 0)
-                                                    <div><i class="bi bi-ticket-perforated text-secondary me-2"></i>Rp
-                                                        {{ number_format($l->harga_tiket, 0, ',', '.') }}</div>
-                                                @else
-                                                    <div><i class="bi bi-ticket-perforated text-secondary me-2"></i>Gratis</div>
-                                                @endif
-                                            </div>
-                                            <div class="mt-4">
-                                                <a href="{{ route('lomba.detail', $l->slug) }}"
-                                                    class="btn btn-sm btn-outline-primary rounded-pill px-4">
-                                                    Detail Lomba <i class="bi bi-arrow-right ms-1"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-
-                    @if($lombas->isEmpty())
-                        <div class="p-5 text-center">
-                            <p class="text-muted mb-0">Belum ada jadwal mata lomba yang tersedia.</p>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="text-center mb-5 mt-5 pt-5" data-aos="fade-up">
-                    <h3 class="fw-bold text-white mb-4">Detailed Process Flow</h3>
-                </div>
-
-                <div class="timeline-flow-wrapper mt-4" data-aos="fade-up">
-                    <div class="timeline-line"></div>
-                    <div class="row g-0 position-relative">
-                        @foreach($timelines as $t)
-                            <div class="col-md-4 mb-5 mb-md-0">
-                                <div class="timeline-flow-item text-center px-3">
-                                    <div class="timeline-dot-wrapper mb-4">
-                                        <div class="timeline-dot mx-auto">
-                                            <div class="timeline-dot-inner"></div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="bg-glass p-4 rounded-4 border border-white border-opacity-10 h-100 transition-all hover-lift">
-                                        <div class="text-primary fw-bold small mb-2 h5">
-                                            {{ \Carbon\Carbon::parse($t->tanggal)->format('d M Y') }}
-                                        </div>
-                                        <h4 class="text-white fw-bold mb-3">{{ $t->judul }}</h4>
-                                        <p class="text-muted mb-0 small leading-relaxed">{{ $t->deskripsi }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    @if($timelines->isEmpty())
-                        <div class="bg-glass p-5 rounded-5 text-center border border-white border-opacity-10"
-                            data-aos="fade-up">
-                            <i class="bi bi-calendar-x fs-1 text-muted opacity-25 mb-4 d-block"></i>
-                            <h4 class="text-white fw-bold">No detailed events scheduled yet</h4>
-                        </div>
-                    @endif
                 </div>
             </div>
         </section>
@@ -221,17 +123,33 @@
                         if (document.querySelector(".countdown-premium")) {
                             document.querySelector(".countdown-premium").innerHTML = "<h3 class='text-white'>EVENT STARTED</h3>";
                         }
-                        // Proactively reload once to refresh status via ViewServiceProvider if auto-update is on
                         @if($setting->auto_update_status)
                             setTimeout(() => { location.reload(); }, 2000);
                         @endif
-                        }
+                                                    }
                 }, 1000);
             </script>
         @endif
 
         <style>
-            /* Countdown Styles */
+            .section-tag {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 8px 20px;
+                border-radius: 50px;
+                font-size: 0.85rem;
+                letter-spacing: 2px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+
+            .text-gradient {
+                background: linear-gradient(to right, #fff, var(--secondary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
             .countdown-premium {
                 perspective: 1000px;
             }
