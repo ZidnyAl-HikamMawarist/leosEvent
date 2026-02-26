@@ -73,10 +73,10 @@
             @endphp
             <div class="mt-5 text-center p-5 rounded-5 bg-glass border border-white border-opacity-10 shadow-lg"
                 data-aos="zoom-in" data-aos-delay="300">
-                <h4 class="text-white fw-bold mb-3">Still have questions?</h4>
-                <p class="text-muted mb-4 fs-5">Our dedicated support team is ready to help you with any inquiries.</p>
+                <h4 class="text-white fw-bold mb-3">Masih punya pertanyaan?</h4>
+                <p class="text-muted mb-4 fs-5">Tim bantuan kami siap membantu Anda dengan pertanyaan apa pun.</p>
                 <a href="{{ $waLink }}" target="_blank" class="btn btn-outline-custom rounded-pill px-5 hover-lift">
-                    Contact Support Team <i class="bi bi-whatsapp ms-2"></i>
+                    Hubungi Bantuan <i class="bi bi-whatsapp ms-2"></i>
                 </a>
             </div>
         @endif
