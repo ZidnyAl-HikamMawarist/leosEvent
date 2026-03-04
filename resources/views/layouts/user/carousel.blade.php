@@ -1,5 +1,5 @@
 @if($carousels->count() > 0)
-    <section id="home" class="py-4 mt-5 position-relative">
+    <section id="home" class="py-4 mt-5 position-relative overflow-hidden">
         <!-- Corner Decorations -->
         <div class="carousel-corner-decor">
             @if(isset($setting) && $setting->side_image_left)
@@ -30,7 +30,7 @@
                             <!-- Tambahkan position relative -->
 
                             <div class="container h-100 d-flex align-items-center">
-                                <div class="row w-100 align-items-center justify-content-center justify-content-md-start">
+                                <div class="row w-100 m-0 align-items-center justify-content-center justify-content-md-start">
                                     <div class="col-lg-10 col-xl-8" data-aos="fade-right">
                                         {{-- Group Tombol Tetap Di Tengah dengan padding ekstra di HP agar terhindar panah
                                         carousel --}}

@@ -12,10 +12,10 @@
             </p>
         </div>
 
-        <div class="row g-4 mt-4">
+        <div class="galeri-grid">
             @foreach($galeris as $g)
-                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
-                    <div class="galeri-img-wrapper group shadow-2xl">
+                <div class="galeri-item" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                    <div class="galeri-img-wrapper group shadow-2xl rounded-4 overflow-hidden">
                         <img src="{{ asset('storage/' . $g->gambar) }}" class="img-fluid w-100 h-100 object-fit-cover"
                             alt="Gallery Image">
 
@@ -33,7 +33,7 @@
             @endforeach
 
             @if($galeris->isEmpty())
-                <div class="col-12" data-aos="fade-up">
+                <div class="w-100" data-aos="fade-up">
                     <div class="bg-glass p-5 rounded-5 text-center border border-white border-opacity-10 py-5 my-5">
                         <i class="bi bi-images fs-1 text-muted opacity-25 mb-4 d-block"></i>
                         <h4 class="text-white fw-bold">Memories being processed</h4>
@@ -50,6 +50,61 @@
         height: 350px;
         position: relative;
         border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .galeri-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .galeri-item {
+        width: calc(33.33333% - 16px);
+    }
+
+    @media (max-width: 991.98px) {
+        .galeri-item {
+            width: calc(50% - 12px);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .galeri-grid {
+            gap: 5px;
+        }
+
+        .galeri-item {
+            width: calc(50% - 2.5px);
+        }
+
+        /* Center the last item if total is odd */
+        .galeri-item:last-child:nth-child(odd) {
+            margin: 0 auto;
+        }
+
+        .galeri-img-wrapper {
+            height: 140px;
+        }
+
+        .galeri-overlay .badge {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .galeri-overlay h5 {
+            font-size: 0.9rem;
+        }
+
+        .zoom-icon-btn {
+            width: 30px;
+            height: 30px;
+        }
+
+        .zoom-icon-btn i {
+            font-size: 1rem !important;
+        }
     }
 
     .zoom-icon-btn {
