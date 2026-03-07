@@ -70,24 +70,6 @@
                                     value="{{ old('lokasi', $lomba->lokasi) }}">
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Juara 1</label>
-                                <input type="text" name="juara_1" class="form-control"
-                                    value="{{ old('juara_1', $lomba->juara_1) }}" placeholder="Nama Pemenang">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Juara 2</label>
-                                <input type="text" name="juara_2" class="form-control"
-                                    value="{{ old('juara_2', $lomba->juara_2) }}" placeholder="Nama Pemenang">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label fw-bold">Juara 3</label>
-                                <input type="text" name="juara_3" class="form-control"
-                                    value="{{ old('juara_3', $lomba->juara_3) }}" placeholder="Nama Pemenang">
-                            </div>
-                        </div>
                     </div>
 
                     <div class="col-md-4">

@@ -72,50 +72,6 @@
                         </div>
                     </div>
 
-                    {{-- Winners Section --}}
-                    @if($lomba->juara_1 || $lomba->juara_2 || $lomba->juara_3)
-                    <div class="winners-box p-4 rounded-4 mb-5 border border-accent border-opacity-20" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);">
-                        <h5 class="text-accent fw-bold mb-4 d-flex align-items-center">
-                            <i class="bi bi-trophy-fill me-2"></i> Pengumuman Pemenang
-                        </h5>
-                        <div class="row g-3">
-                            @if($lomba->juara_1)
-                            <div class="col-12">
-                                <div class="winner-item d-flex align-items-center p-2 rounded-3 bg-white bg-opacity-5">
-                                    <span class="me-3 h4 mb-0">🥇</span>
-                                    <div>
-                                        <div class="small text-white-50">Juara 1</div>
-                                        <div class="fw-bold text-white">{{ $lomba->juara_1 }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                            @if($lomba->juara_2)
-                            <div class="col-6">
-                                <div class="winner-item d-flex align-items-center p-2 rounded-3 bg-white bg-opacity-5">
-                                    <span class="me-3 h4 mb-0">🥈</span>
-                                    <div>
-                                        <div class="small text-white-50">Juara 2</div>
-                                        <div class="fw-bold text-white">{{ $lomba->juara_2 }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                            @if($lomba->juara_3)
-                            <div class="col-6">
-                                <div class="winner-item d-flex align-items-center p-2 rounded-3 bg-white bg-opacity-5">
-                                    <span class="me-3 h4 mb-0">🥉</span>
-                                    <div>
-                                        <div class="small text-white-50">Juara 3</div>
-                                        <div class="fw-bold text-white">{{ $lomba->juara_3 }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                    @endif
-
                     <div class="d-flex flex-wrap gap-3">
                         <a href="/pendaftaran" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-lg fw-bold">Daftar Sekarang</a>
                         <a href="/" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill glass-effect fw-bold">Kembali</a>

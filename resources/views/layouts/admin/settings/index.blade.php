@@ -28,11 +28,7 @@
                                 value="{{ $setting->nama_event ?? '' }}" placeholder="Contoh: LEOS EVENT 2024">
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Deskripsi Singkat (Footer)</label>
-                            <textarea name="footer_description" class="form-control"
-                                rows="3">{{ $setting->footer_description ?? '' }}</textarea>
-                        </div>
+
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Kontak (WhatsApp/Email)</label>
@@ -177,20 +173,8 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Google Font URL</label>
-                            <input type="text" name="font_family_url" class="form-control"
-                                value="{{ $setting->font_family_url ?? '' }}">
-                        </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Template Tema</label>
-                            <select name="theme_slug" class="form-select">
-                                <option value="default" {{ ($setting->theme_slug ?? 'default') == 'default' ? 'selected' : '' }}>Default Premium</option>
-                                <option value="modern" {{ ($setting->theme_slug ?? '') == 'modern' ? 'selected' : '' }}>Modern
-                                    Clean</option>
-                            </select>
-                        </div>
+
                     </div>
                 </div>
 
@@ -202,8 +186,42 @@
                         </h5>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Logo Website</label>
+                            <label class="form-label fw-semibold">Logo Event</label>
                             <input type="file" name="logo" class="form-control">
+                            @if($setting && $setting->logo)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo Event" class="rounded"
+                                        style="max-height: 50px;">
+                                    <small class="text-muted d-block mt-1">Logo saat ini</small>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Logo Sekolah (Footer)</label>
+                            <input type="file" name="school_logo" class="form-control">
+                            @if($setting && $setting->school_logo)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/' . $setting->school_logo) }}" alt="Logo Sekolah"
+                                        class="rounded" style="max-height: 50px;">
+                                    <small class="text-muted d-block mt-1">Logo sekolah saat ini</small>
+                                </div>
+                            @endif
+                            <small class="text-muted">Logo sekolah yang tampil di footer website.</small>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nama Sekolah</label>
+                                <input type="text" name="nama_sekolah" class="form-control"
+                                    value="{{ $setting->nama_sekolah ?? '' }}" placeholder="Contoh: SMKN 1 Ciamis">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Teks Penyelenggara</label>
+                                <input type="text" name="organizer_text" class="form-control"
+                                    value="{{ $setting->organizer_text ?? '' }}" placeholder="Contoh: Diselenggarakan di">
+                                <small class="text-muted">Teks sebelum nama sekolah di footer.</small>
+                            </div>
                         </div>
 
                         <div class="mb-3">

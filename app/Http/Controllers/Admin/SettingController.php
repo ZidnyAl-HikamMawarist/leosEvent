@@ -69,6 +69,9 @@ class SettingController extends Controller
             'footer_text' => 'nullable|string',
             'about_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'school_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'nama_sekolah' => 'nullable|string|max:255',
+            'organizer_text' => 'nullable|string|max:255',
             'navbar_element' => 'nullable|string',
             'top_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'side_image_left' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
@@ -149,7 +152,7 @@ class SettingController extends Controller
 
         $setting = Setting::first();
 
-        $imageFields = ['about_image', 'logo', 'top_image', 'side_image_left', 'side_image_right', 'side_image_left_bottom', 'side_image_right_bottom', 'footer_image'];
+        $imageFields = ['about_image', 'logo', 'school_logo', 'top_image', 'side_image_left', 'side_image_right', 'side_image_left_bottom', 'side_image_right_bottom', 'footer_image'];
 
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {

@@ -328,19 +328,36 @@
         <div class="container">
             <div class="row g-5">
                 <div class="col-lg-5">
-                    <h3 class="fw-bold mb-3 d-flex align-items-center">
-                        <i class="bi bi-intersect text-primary me-2"></i>
-                        {{ $setting->nama_event ?? 'LEOS EVENT' }}
-                    </h3>
-                    <p class="text-white-50 small mb-2 text-uppercase fw-semibold" style="letter-spacing: 1px;">
-                        Diselenggarakan oleh SMKN 1 Ciamis</p>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        @if($setting && $setting->school_logo)
+                            <img src="{{ asset('storage/' . $setting->school_logo) }}" alt="Logo Sekolah" class="img-fluid"
+                                style="max-height: 50px;">
+                        @endif
+                        @if($setting && $setting->logo)
+                            <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo Event" class="img-fluid"
+                                style="max-height: 50px;">
+                        @endif
+                        <div>
+                            <h3 class="fw-bold mb-1 d-flex align-items-center">
+                                @if(!$setting || (!$setting->logo && !$setting->school_logo))
+                                    <i class="bi bi-intersect text-primary me-2"></i>
+                                @endif
+                                {{ $setting->nama_event ?? 'LEOS EVENT' }}
+                            </h3>
+                            <p class="text-white-50 small mb-0 text-uppercase fw-semibold" style="letter-spacing: 1px;">
+                                {{ $setting->organizer_text ?? 'Diselenggarakan di' }}
+                                {{ $setting->nama_sekolah ?? 'SMKN 1 Ciamis' }}
+                            </p>
+                        </div>
+                    </div>
                     <p class="text-muted mb-4 fs-6" style="max-width: 400px;">
                         {{ $setting->deskripsi_event ?? 'Memberikan ruang bagi generasi muda untuk menjunjung tinggi kreativitas, sportivitas, dan inovasi.' }}
                     </p>
                     <div class="social-links d-flex gap-3">
                         @if($setting && $setting->footer_ig_link)
-                            <a href="{{ $setting->footer_ig_link }}" target="_blank" class="social-icon-btn"><i
-                                    class="bi bi-instagram"></i></a>
+                            <a href="{{ $setting->footer_ig_link }}" target="_blank" class="social-icon-btn">
+                                <i class="bi bi-instagram"></i>
+                            </a>
                         @endif
                         <!-- Additional social links can be added here if needed in the future -->
                     </div>

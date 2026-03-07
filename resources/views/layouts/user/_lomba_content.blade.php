@@ -24,9 +24,8 @@
             </p>
         </div>
 
-        <!-- Gunakan flex-nowrap dan overflow-x-auto agar bisa geser samping -->
-        <div id="lombaScrollContainer" class="d-flex flex-nowrap overflow-x-auto pb-4 gap-3 custom-scrollbar"
-            style="scroll-snap-type: x mandatory;">
+        <!-- Container with smooth marquee effect or refined scroll -->
+        <div id="lombaScrollContainer" class="d-flex flex-nowrap overflow-x-auto pb-4 gap-4 custom-scrollbar">
             @foreach($lombas as $l)
                 <div style="flex: 0 0 250px; scroll-snap-align: start;">
                     <div
@@ -68,28 +67,29 @@
         const container = document.getElementById('lombaScrollContainer');
         if (!container) return;
 
-        let scrollAmount = 0;
-        let step = 1; // Speed of scrolling
-        let delay = 30; // Milliseconds per frame
         let isHovered = false;
+        let scrollSpeed = 0.5; // Kecepatan gerak (pixel per frame)
 
-        const startScrolling = () => {
+        const smoothLoop = () => {
             if (!isHovered) {
-                container.scrollLeft += step;
-                // If it reaches the end, reset to start
-                if (container.scrollLeft >= (container.scrollWidth - container.clientWidth)) {
+                container.scrollLeft += scrollSpeed;
+
+                // Jika sudah sampai di paling kanan (dengan toleransi), balik ke awal secara smooth
+                if (container.scrollLeft >= (container.scrollWidth - container.clientWidth - 1)) {
                     container.scrollLeft = 0;
                 }
             }
+            requestAnimationFrame(smoothLoop);
         };
 
-        let scrollInterval = setInterval(startScrolling, delay);
+        // Mulai animasi halus
+        requestAnimationFrame(smoothLoop);
 
-        // Pause on hover
+        // Slow down on hover instead of full stop for more "premium" feel, or full stop if preferred
         container.addEventListener('mouseenter', () => { isHovered = true; });
         container.addEventListener('mouseleave', () => { isHovered = false; });
 
-        // Pause on touch (mobile)
+        // Touch support
         container.addEventListener('touchstart', () => { isHovered = true; }, { passive: true });
         container.addEventListener('touchend', () => { isHovered = false; }, { passive: true });
     });

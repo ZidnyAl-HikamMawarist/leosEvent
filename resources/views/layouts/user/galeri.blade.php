@@ -46,46 +46,79 @@
 </section>
 
 <style>
-    .galeri-img-wrapper {
-        height: 350px;
-        position: relative;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
     .galeri-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 24px;
-        justify-content: center;
+        column-count: 3;
+        column-gap: 20px;
         margin-top: 1.5rem;
     }
 
     .galeri-item {
-        width: calc(33.33333% - 16px);
+        break-inside: avoid;
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .galeri-img-wrapper {
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.4s ease, border-color 0.4s ease;
+    }
+
+    /* Remove fixed height so images look masonry-style */
+    .galeri-img-wrapper img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 1rem;
+        transition: transform 0.5s ease;
+    }
+
+    .galeri-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 9, 8, 0.9) 0%, rgba(15, 9, 8, 0.4) 50%, rgba(15, 9, 8, 0) 100%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.5rem;
+    }
+
+    .galeri-img-wrapper:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .galeri-img-wrapper:hover img {
+        transform: scale(1.05);
+    }
+
+    .galeri-img-wrapper:hover .galeri-overlay {
+        opacity: 1;
     }
 
     @media (max-width: 991.98px) {
-        .galeri-item {
-            width: calc(50% - 12px);
+        .galeri-grid {
+            column-count: 2;
         }
     }
 
     @media (max-width: 767.98px) {
         .galeri-grid {
-            gap: 5px;
+            column-count: 2;
+            column-gap: 10px;
         }
 
         .galeri-item {
-            width: calc(50% - 2.5px);
+            margin-bottom: 10px;
         }
 
-        /* Center the last item if total is odd */
-        .galeri-item:last-child:nth-child(odd) {
-            margin: 0 auto;
-        }
-
-        .galeri-img-wrapper {
-            height: 140px;
+        .galeri-overlay {
+            padding: 0.8rem;
         }
 
         .galeri-overlay .badge {
@@ -94,7 +127,7 @@
         }
 
         .galeri-overlay h5 {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .zoom-icon-btn {
@@ -103,7 +136,7 @@
         }
 
         .zoom-icon-btn i {
-            font-size: 1rem !important;
+            font-size: 0.9rem !important;
         }
     }
 
@@ -125,9 +158,5 @@
     .galeri-img-wrapper:hover .zoom-icon-btn {
         transform: translateY(0);
         opacity: 1;
-    }
-
-    .galeri-img-wrapper:hover {
-        border-color: var(--primary);
     }
 </style>
