@@ -155,8 +155,8 @@ class SettingController extends Controller
             if ($request->hasFile($field)) {
                 // Delete old image if exists
                 if ($setting && $setting->$field) {
-                    if (file_exists(storage_path('app/public/' . $setting->$field))) {
-                        unlink(storage_path('app/public/' . $setting->$field));
+                    if (\Illuminate\Support\Facades\Storage::exists('public/' . $setting->$field)) {
+                        \Illuminate\Support\Facades\Storage::delete('public/' . $setting->$field);
                     }
                 }
                 $data[$field] = $request->file($field)->store('settings', 'public');
@@ -166,14 +166,14 @@ class SettingController extends Controller
         // Handle Background Image Separately
         if ($request->hasFile('background_image')) {
             if ($setting && $setting->background_image) {
-                if (file_exists(storage_path('app/public/' . $setting->background_image))) {
-                    unlink(storage_path('app/public/' . $setting->background_image));
+                if (\Illuminate\Support\Facades\Storage::exists('public/' . $setting->background_image)) {
+                    \Illuminate\Support\Facades\Storage::delete('public/' . $setting->background_image);
                 }
             }
             $data['background_image'] = $request->file('background_image')->store('settings', 'public');
         } elseif ($request->has('delete_background_image') && $setting && $setting->background_image) {
-            if (file_exists(storage_path('app/public/' . $setting->background_image))) {
-                unlink(storage_path('app/public/' . $setting->background_image));
+            if (\Illuminate\Support\Facades\Storage::exists('public/' . $setting->background_image)) {
+                \Illuminate\Support\Facades\Storage::delete('public/' . $setting->background_image);
             }
             $data['background_image'] = null;
         }

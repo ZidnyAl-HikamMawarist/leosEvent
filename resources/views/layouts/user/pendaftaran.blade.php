@@ -325,4 +325,31 @@
             });
         </script>
     @endif
+
+    @if(session('error'))
+        <!-- Premium Error Modal -->
+        <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-5 p-2" style="background: rgba(15, 9, 8, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(220, 53, 69, 0.3); box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);">
+                    <div class="modal-header border-0 justify-content-end pb-0">
+                        <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center px-4 px-md-5 pt-0 pb-5">
+                        <div class="success-icon-wrapper mb-4 shadow" style="background: rgba(220, 53, 69, 0.1); border-color: rgba(220, 53, 69, 0.3);">
+                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h3 class="fw-bold text-white mb-3 font-secondary">Pendaftaran Gagal!</h3>
+                        <p class="text-white-50 mb-4">{{ session('error') }}</p>
+                        <button type="button" class="btn btn-danger rounded-pill px-5 mt-2 shadow" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+                errorModal.show();
+            });
+        </script>
+    @endif
 @endsection

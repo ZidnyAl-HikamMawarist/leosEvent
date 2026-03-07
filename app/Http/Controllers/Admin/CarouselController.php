@@ -60,8 +60,8 @@ class CarouselController extends Controller
 
         if ($request->hasFile('gambar')) {
             // Delete old image
-            if (file_exists(storage_path('app/public/' . $carousel->gambar))) {
-                unlink(storage_path('app/public/' . $carousel->gambar));
+            if (\Illuminate\Support\Facades\Storage::exists('public/' . $carousel->gambar)) {
+                \Illuminate\Support\Facades\Storage::delete('public/' . $carousel->gambar);
             }
             $data['gambar'] = $request->file('gambar')->store('carousel', 'public');
         } else {
@@ -77,8 +77,8 @@ class CarouselController extends Controller
     public function destroy(Carousel $carousel)
     {
         // Delete image
-        if (file_exists(storage_path('app/public/' . $carousel->gambar))) {
-            unlink(storage_path('app/public/' . $carousel->gambar));
+        if (\Illuminate\Support\Facades\Storage::exists('public/' . $carousel->gambar)) {
+            \Illuminate\Support\Facades\Storage::delete('public/' . $carousel->gambar);
         }
         $carousel->delete();
         return back()->with('success', 'Carousel dihapus');

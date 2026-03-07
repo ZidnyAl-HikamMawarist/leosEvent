@@ -25,6 +25,9 @@ class LombaController extends Controller
     public function checkName(Request $request)
     {
         $exists = Lomba::where('nama_lomba', $request->name)
+            ->when($request->event_year, function ($q) use ($request) {
+                return $q->where('event_year', $request->event_year);
+            })
             ->when($request->exclude_id, function ($q) use ($request) {
                 return $q->where('id', '!=', $request->exclude_id);
             })
@@ -119,8 +122,8 @@ class LombaController extends Controller
 
     public function destroy(Lomba $lomba)
     {
-        if ($lomba->poster && file_exists(storage_path('app/public/' . $lomba->poster))) {
-            unlink(storage_path('app/public/' . $lomba->poster));
+        if ($lomba->poster && \Illuminate\Support\Facades\Storage::exists('public/' . $lomba->poster)) {
+            \Illuminate\Support\Facades\Storage::delete('public/' . $lomba->poster);
         }
         $lomba->delete();
         return back()->with('success', 'Lomba dihapus');

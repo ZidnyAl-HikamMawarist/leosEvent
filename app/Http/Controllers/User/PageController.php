@@ -82,8 +82,8 @@ class PageController extends Controller
             'no_wa' => 'required|string|max:20',
             'sekolah' => 'required|string|max:255',
             'lomba_id' => 'required|exists:lombas,id',
-            'nama_pembina' => 'required|string|max:255',
-            'no_hp_pembina' => 'required|string|max:20',
+            'nama_pembina' => 'nullable|string|max:255',
+            'no_hp_pembina' => 'nullable|string|max:20',
             'metode_pembayaran' => 'required|in:transfer,tunai',
         ]);
 
@@ -100,8 +100,27 @@ class PageController extends Controller
 
         $data['status'] = 'pending';
 
-        $pendaftaran = Pendaftaran::create($data);
+        // Cek apakah email atau no_wa sudah pernah terdaftar di lomba yang sama
+        $sudahDaftar = Pendaftaran::where('lomba_id', $request->lomba_id)
+            ->where(function ($query) use ($request) {
+                $query->where('email', $request->email)
+                    ->orWhere('no_wa', $request->no_wa);
+            })
+            ->exists();
+
+        if ($sudahDaftar) {
+            return back()->withInput()->with('error', 'Email atau Nomor WhatsApp ini sudah terdaftar pada perlombaan yang sama. Jika Anda merasa belum mendaftar, silakan hubungi kontak panitia.');
+        }
+
         $lomba = Lomba::find($request->lomba_id);
+
+        // Map ke kolom pemimpin regu jika tipe lomba kelompok
+        if ($lomba && $lomba->tipe_lomba === 'kelompok') {
+            $data['nama_pemimpin_regu'] = $data['nama'];
+            $data['no_hp_pemimpin_regu'] = $data['no_wa'];
+        }
+
+        $pendaftaran = Pendaftaran::create($data);
 
         return redirect()->route('pendaftaran')->with([
             'success' => 'Pendaftaran berhasil dikirim! Silakan ikuti instruksi selanjutnya.',

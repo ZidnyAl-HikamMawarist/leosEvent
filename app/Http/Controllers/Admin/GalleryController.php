@@ -59,8 +59,8 @@ class GalleryController extends Controller
 
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama
-            if ($galeri->gambar && file_exists(storage_path('app/public/' . $galeri->gambar))) {
-                unlink(storage_path('app/public/' . $galeri->gambar));
+            if ($galeri->gambar && \Illuminate\Support\Facades\Storage::exists('public/' . $galeri->gambar)) {
+                \Illuminate\Support\Facades\Storage::delete('public/' . $galeri->gambar);
             }
             $data['gambar'] = $request->file('gambar')->store('galeri', 'public');
         } else {
@@ -76,8 +76,8 @@ class GalleryController extends Controller
 
     public function destroy(Galeri $galeri)
     {
-        if ($galeri->gambar && file_exists(storage_path('app/public/' . $galeri->gambar))) {
-            unlink(storage_path('app/public/' . $galeri->gambar));
+        if ($galeri->gambar && \Illuminate\Support\Facades\Storage::exists('public/' . $galeri->gambar)) {
+            \Illuminate\Support\Facades\Storage::delete('public/' . $galeri->gambar);
         }
         $galeri->delete();
         return back()->with('success', 'Foto galeri dihapus');
