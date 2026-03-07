@@ -1,8 +1,7 @@
-<section id="faq" class="py-5 position-relative overflow-hidden">
+<section id="faq" class="pt-3 pb-5 position-relative overflow-hidden">
 
-
-    <div class="container py-5 position-relative">
-        <div class="row align-items-center mb-5">
+    <div class="container pt-3 pb-5 position-relative">
+        <div class="row align-items-center mb-4">
             <div class="col-lg-6" data-aos="fade-right">
                 <div class="section-tag mb-4 shadow-sm text-white">
                     {{ $setting->faq_tag ?? '❓ Support Portal' }}

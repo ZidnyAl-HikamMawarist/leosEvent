@@ -25,14 +25,14 @@
         </div>
 
         <!-- Gunakan flex-nowrap dan overflow-x-auto agar bisa geser samping -->
-        <div class="d-flex flex-nowrap overflow-x-auto pb-4 gap-3 custom-scrollbar"
+        <div id="lombaScrollContainer" class="d-flex flex-nowrap overflow-x-auto pb-4 gap-3 custom-scrollbar"
             style="scroll-snap-type: x mandatory;">
             @foreach($lombas as $l)
                 <div style="flex: 0 0 250px; scroll-snap-align: start;">
                     <div
                         class="premium-card bg-glass overflow-hidden d-flex flex-column h-100 shadow-lg border border-white border-opacity-10 rounded-4">
                         <a href="{{ route('lomba.detail', $l->slug) }}" class="text-decoration-none">
-                            <div class="position-relative overflow-hidden w-100" style="height: 200px;">
+                            <div class="position-relative overflow-hidden w-100 rounded-top-4" style="height: 200px;">
                                 <img src="{{ asset('storage/' . $l->poster) }}" class="w-100 h-100"
                                     style="object-fit: cover; object-position: center; transition: transform 0.3s ease;"
                                     alt="{{ $l->nama_lomba }}">
@@ -51,7 +51,7 @@
                             <div class="mt-auto">
                                 <a href="{{ route('pendaftaran', ['lomba_id' => $l->id]) }}"
                                     class="btn btn-primary w-100 rounded-pill py-2 fw-semibold shadow-sm">
-                                    Join
+                                    Daftar Sekarang
                                 </a>
                             </div>
                         </div>
@@ -62,6 +62,38 @@
 
     </div>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById('lombaScrollContainer');
+        if (!container) return;
+
+        let scrollAmount = 0;
+        let step = 1; // Speed of scrolling
+        let delay = 30; // Milliseconds per frame
+        let isHovered = false;
+
+        const startScrolling = () => {
+            if (!isHovered) {
+                container.scrollLeft += step;
+                // If it reaches the end, reset to start
+                if (container.scrollLeft >= (container.scrollWidth - container.clientWidth)) {
+                    container.scrollLeft = 0;
+                }
+            }
+        };
+
+        let scrollInterval = setInterval(startScrolling, delay);
+
+        // Pause on hover
+        container.addEventListener('mouseenter', () => { isHovered = true; });
+        container.addEventListener('mouseleave', () => { isHovered = false; });
+
+        // Pause on touch (mobile)
+        container.addEventListener('touchstart', () => { isHovered = true; }, { passive: true });
+        container.addEventListener('touchend', () => { isHovered = false; }, { passive: true });
+    });
+</script>
 
 <style>
     .premium-card:hover img {

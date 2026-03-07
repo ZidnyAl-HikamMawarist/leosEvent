@@ -1,5 +1,5 @@
-<section id="galeri" class="py-5 overflow-hidden">
-    <div class="container py-5">
+<section id="galeri" class="pt-5 pb-3 overflow-hidden">
+    <div class="container pt-4 pb-2">
         <div class="text-center mb-5" data-aos="fade-up">
             <div class="section-tag mb-4 shadow-sm text-white">
                 {{ $setting->galeri_tag ?? '📸 Visual Journey' }}

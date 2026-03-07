@@ -18,8 +18,8 @@
             @endif
         </div>
 
-        <!-- Tambahkan px-0 agar di HP tidak ada ruang kosong di kiri/kanan, tapi tetap ada jarak di laptop (px-lg-5) -->
-        <div class="container-fluid px-2 px-lg-5 position-relative z-1">
+        <!-- Carousel dengan padding agar kuriwel bisa jadi dekorasi bingkai -->
+        <div class="container-fluid px-1 px-lg-2 position-relative z-1">
             <div id="heroCarousel"
                 class="carousel slide carousel-fade hero-carousel-premium shadow-2xl overflow-hidden rounded-5 hero-carousel-height"
                 data-bs-ride="carousel">
@@ -38,13 +38,13 @@
                                             <a href="{{ $slide->link_url ?? route('pendaftaran') }}"
                                                 class="btn btn-primary-custom rounded-pill px-4 px-md-5 py-2 py-md-3 shadow fw-bold d-flex justify-content-center align-items-center"
                                                 style="font-size: min(1rem, 4vw);">
-                                                {{ $setting->hero_primary_btn_text ?? 'Join Now' }} <i
+                                                {{ $setting->hero_primary_btn_text ?? 'Daftar Sekarang' }} <i
                                                     class="bi bi-arrow-right-circle ms-2"></i>
                                             </a>
                                             <a href="#about"
                                                 class="btn btn-outline-custom rounded-pill px-4 px-md-5 py-2 py-md-3 glass-effect text-white fw-bold d-flex justify-content-center align-items-center"
                                                 style="font-size: min(1rem, 4vw);">
-                                                {{ $setting->hero_secondary_btn_text ?? 'Learn More' }}
+                                                {{ $setting->hero_secondary_btn_text ?? 'Selengkapnya' }}
                                             </a>
                                         </div>
                                     </div>
@@ -55,11 +55,11 @@
                             @if($slide->keterangan)
                                 <div class="position-absolute start-0 w-100 carousel-keterangan">
                                     <div class="container">
-                                        <div class="border-start border-primary border-4 ps-4 overflow-hidden"
-                                            style="background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, transparent 100%); display: inline-block; max-width: 90%;">
-                                            <p class="text-white mb-0 fw-bold fs-4 carousel-keterangan-text"
-                                                style="letter-spacing: 0.5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                                                <i class="bi bi-info-circle-fill me-2 text-primary"></i>
+                                        <div class="d-inline-block px-4 py-3 rounded-pill glass-effect border border-white border-opacity-15"
+                                            style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.08); max-width: 90%;">
+                                            <p class="text-white mb-0 fw-semibold carousel-keterangan-text"
+                                                style="font-size: 1.05rem; letter-spacing: 0.3px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">
+                                                <i class="bi bi-info-circle-fill me-2 text-secondary"></i>
                                                 {{ $slide->keterangan }}
                                             </p>
                                         </div>
@@ -88,7 +88,7 @@
     </section>
 @else
     <section id="home" class="py-4 mt-5">
-        <div class="container-fluid px-lg-5">
+        <div class="container-fluid px-1 px-lg-2">
             <div class="hero-section-alt rounded-5 overflow-hidden position-relative shadow-2xl"
                 style="background-image: url('{{ asset('images/hero.png') }}'); height: 600px;">
                 <div class="hero-overlay"></div>
@@ -110,13 +110,13 @@
                                 <a href="{{ route('pendaftaran') }}"
                                     class="btn btn-primary-custom rounded-pill px-4 px-md-5 py-2 py-md-3 shadow fw-bold d-flex justify-content-center align-items-center"
                                     style="font-size: min(1rem, 4vw);">
-                                    {{ $setting->hero_primary_btn_text ?? 'Join Now' }} <i
+                                    {{ $setting->hero_primary_btn_text ?? 'Daftar Sekarang' }} <i
                                         class="bi bi-arrow-right-circle ms-2"></i>
                                 </a>
                                 <a href="#about"
                                     class="btn btn-outline-custom rounded-pill px-4 px-md-5 py-2 py-md-3 glass-effect fw-bold d-flex justify-content-center align-items-center"
                                     style="font-size: min(1rem, 4vw);">
-                                    {{ $setting->hero_secondary_btn_text ?? 'Learn More' }}
+                                    {{ $setting->hero_secondary_btn_text ?? 'Selengkapnya' }}
                                 </a>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
         -webkit-text-fill-color: transparent;
     }
 
-    /* Corner Decorations */
+    /* Corner Decorations — bingkai dekoratif */
     .carousel-corner-decor {
         position: absolute;
         top: 0;
@@ -209,29 +209,25 @@
         height: 100%;
         pointer-events: none;
         z-index: 10;
-        /* Bring to front to overlap carousel */
     }
 
     .corner-decor {
         position: absolute;
         width: 250px;
         height: auto;
-        opacity: 1;
+        opacity: 0.6;
         transition: all 0.3s ease;
         filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-        /* Add shadow for depth */
     }
 
     .corner-left {
         top: -30px;
         left: -30px;
-        /* Pull it out a bit to hug the corner */
     }
 
     .corner-right {
         top: -30px;
         right: -30px;
-        /* Pull it out a bit */
     }
 
     .corner-left-bottom {
@@ -246,6 +242,19 @@
 
     .hero-carousel-height {
         height: 600px;
+    }
+
+    /* Gradient fade at bottom of carousel for smooth transition */
+    .carousel-item::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 35%;
+        background: linear-gradient(to bottom, transparent, rgba(15, 9, 8, 0.85));
+        pointer-events: none;
+        z-index: 1;
     }
 
     .carousel-keterangan {

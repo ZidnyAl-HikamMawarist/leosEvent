@@ -66,7 +66,7 @@
                                 <div class="info-icon me-3 h2 mb-0 text-accent">📎</div>
                                 <div>
                                     <div class="small text-white-50">Pedoman Lomba</div>
-                                    <a href="{{ $lomba->juklak_juknis_link }}" class="fw-bold text-accent text-decoration-none">Download Juklak/Juknis</a>
+                                    <a href="{{ $lomba->juklak_juknis_link }}" class="fw-bold text-accent text-decoration-none" target="_blank">Download Juklak/Juknis</a>
                                 </div>
                             </div>
                         </div>

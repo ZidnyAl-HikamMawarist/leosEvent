@@ -279,7 +279,11 @@
                         <i class="bi bi-intersect fs-3 text-secondary"></i>
                     @endif
                 </div>
-                <span class="brand-text">{{ $setting->nama_event ?? 'LEOS EVENT' }}</span>
+                <div class="d-flex flex-column justify-content-center">
+                    <span class="brand-text lh-1 mb-1">{{ $setting->nama_event ?? 'LEOS EVENT' }}</span>
+                    <span class="text-muted lh-1"
+                        style="font-size: 0.65rem; font-weight: 500; letter-spacing: 0.5px;">BY SMKN 1 CIAMIS</span>
+                </div>
             </a>
             <button class="navbar-toggler border-0 text-light" type="button" data-bs-toggle="collapse"
                 data-bs-target="#nav">
@@ -306,7 +310,7 @@
                     @endif
                     <li class="nav-item ms-lg-3">
                         <a href="{{ route('pendaftaran') }}" class="btn btn-primary-custom rounded-pill px-4 shadow-sm">
-                            Join Event <i class="bi bi-arrow-right ms-2"></i>
+                            Daftar Sekarang <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </li>
                 </ul>
@@ -320,16 +324,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer-premium pt-5 pb-4 border-top border-secondary border-opacity-10">
+    <footer class="footer-premium pt-4 pb-2 border-top border-secondary border-opacity-10">
         <div class="container">
             <div class="row g-5">
                 <div class="col-lg-5">
-                    <h3 class="fw-bold mb-4 d-flex align-items-center">
+                    <h3 class="fw-bold mb-3 d-flex align-items-center">
                         <i class="bi bi-intersect text-primary me-2"></i>
                         {{ $setting->nama_event ?? 'LEOS EVENT' }}
                     </h3>
-                    <p class="text-muted mb-4 fs-5" style="max-width: 400px;">
-                        {{ $setting->deskripsi_event ?? 'Redefining the standard of excellence in event experiences. Join us for a journey of innovation and connection.' }}
+                    <p class="text-white-50 small mb-2 text-uppercase fw-semibold" style="letter-spacing: 1px;">
+                        Diselenggarakan oleh SMKN 1 Ciamis</p>
+                    <p class="text-muted mb-4 fs-6" style="max-width: 400px;">
+                        {{ $setting->deskripsi_event ?? 'Memberikan ruang bagi generasi muda untuk menjunjung tinggi kreativitas, sportivitas, dan inovasi.' }}
                     </p>
                     <div class="social-links d-flex gap-3">
                         @if($setting && $setting->footer_ig_link)
@@ -370,24 +376,20 @@
                     @endif
                 </div>
             </div>
-            <hr class="my-5 border-secondary border-opacity-10">
-            <div class="row align-items-center mb-4">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="text-muted mb-0 small">
-                        {{ $setting->footer_text ?? '© 2024 Leos Event. All Rights Reserved.' }}
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
-                    <p class="text-muted mb-0 small">Handcrafted by <span class="text-primary font-bold"> Zidny</span>
-                    </p>
-                </div>
-            </div>
             @if($setting && $setting->footer_image)
-                <div class="text-center mt-5">
+                <div class="text-center mt-4 mb-2">
                     <img src="{{ asset('storage/' . $setting->footer_image) }}" class="img-fluid"
-                        style="max-height: 80px; opacity: 0.6;" alt="Footer Decoration">
+                        style="max-height: 60px; opacity: 0.5;" alt="Footer Decoration">
                 </div>
             @endif
+            <hr class="my-3 border-secondary border-opacity-10">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center py-2">
+                <p class="text-muted mb-0 small">
+                    {{ $setting->footer_text ?? '© 2024 Leos Event. All Rights Reserved.' }}
+                </p>
+                <p class="text-muted mb-0 small mt-1 mt-md-0">Handcrafted by <span
+                        class="text-primary fw-bold">Zidny</span></p>
+            </div>
         </div>
     </footer>
 
