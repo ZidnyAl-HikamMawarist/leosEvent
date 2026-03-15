@@ -146,8 +146,8 @@ class SettingController extends Controller
             'about_feature4_desc' => 'nullable|string',
             'about_feature4_icon' => 'nullable|string|max:100',
             'about_btn_text' => 'nullable|string|max:100',
-            'footer_ig_link' => 'nullable|string',
             'footer_map_link' => 'nullable|string',
+            'tanggal_tm' => 'nullable|date_format:Y-m-d H:i',
         ]);
 
         $setting = Setting::first();

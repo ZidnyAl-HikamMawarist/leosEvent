@@ -19,6 +19,7 @@ class Pendaftaran extends Model
         'no_hp_pemimpin_regu',
         'formulir_pendaftaran',
         'metode_pembayaran',
+        'import_batch',
     ];
 
     public function lomba()

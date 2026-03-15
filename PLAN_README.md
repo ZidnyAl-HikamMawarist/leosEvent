@@ -165,7 +165,46 @@ Informasi detail:
  Gunakan spacing & alignment yang rapi agar tidak terlalu padat.
 ---
 
-## Fase 5: Mobile & Tablet Responsiveness Optimization (COMPLETED ✅)
+# 🚀 Usulan Perubahan Logic & Konten Pasca Technical Meeting (TM)
+
+Berdasarkan aturan baru bahwa pendaftaran harus ditutup setelah Technical Meeting (TM) dilaksanakan, berikut adalah rencana perombakan logic dan ide konten untuk menjaga website tetap menarik.
+
+## 1. Perubahan Logic (Disable Pendaftaran)
+Untuk mengotomatisasi penutupan pendaftaran, berikut logic teknis yang disarankan:
+
+### A. Penambahan Data (Database)
+- Menambahkan field `tanggal_tm` (datetime) pada tabel `settings` (atau per lombas jika TM tiap lomba berbeda).
+- Field ini akan menjadi acuan sistem untuk menutup pendaftaran secara otomatis.
+
+### B. Logic di Controller (PageController.php)
+Sistem akan melakukan pengecekan waktu saat ini (`now()`) terhadap `tanggal_tm`:
+- **Di Method `pendaftaran` (View)**: Jika sudah melewati waktu TM, kirim variabel (misal: `$isRegistrationClosed = true`) ke view agar form tidak ditampilkan dan diganti dengan pesan peringatan.
+- **Di Method `storePendaftaran` (Action)**: Tambahkan proteksi validasi. Jika ada user yang mencoba menembak API/Form secara paksa setelah TM, sistem akan menolak dan mengembalikan pesan error: "Technical Meeting sudah dilaksanakan, pendaftaran sudah ditutup!".
+
+## 2. Ide Konten Menarik (Setelah Pendaftaran Tutup)
+Agar website tidak terlihat "mati" setelah tombol daftar hilang, berikut adalah hal-hal yang bisa ditampilkan untuk tetap menarik minat pengunjung dan peserta:
+
+### 1. 📣 Virtual Cheer Wall (Tembok Dukungan)
+- **Penempatan**:
+    - **Opsi Terbaik**: Halaman Home (Section Khusus). Ganti area "Daftar Sekarang" dengan section lebar bertajuk "Wall of Support". Ini memberikan kesan meriah begitu orang buka web.
+    - **Opsi Tambahan**: Halaman Detail Lomba. Pesan yang muncul di sini disaring (filter) hanya untuk lomba tersebut.
+- **Cara Tanya Ke User**: Munculkan tombol melayang (Floating Action Button) kecil di pojok kanan bawah bertuliskan "Kirim Semangat 💬".
+
+### 2. 🗳️ Polling Peserta (Vote Jagoanmu)
+- **Logic Data (Masalah GForms)**: Admin perlu melakukan Import Manual atau list nama tim/peserta ke dalam database web agar nama mereka muncul di pilihan voting.
+- **Penempatan Voting**:
+    - **Di Halaman Detail Lomba**: Penempatan paling logis. Di bawah deskripsi lomba ada polling "Siapa Tim Futsal Favoritmu?".
+    - **Hasil di Home**: Di Home Page, tampilkan "Top 3 Peserta Terpopuler" (gabungan semua lomba) sebagai highlight.
+
+### 3. 📥 Fitur Import Peserta Manual (Admin)
+- **Cara Kerja**:
+    - Sediakan tombol "Import Excel/CSV" di Dashboard Admin.
+    - Admin mengunggah file berisi daftar nama peserta/tim dan asal sekolahnya.
+    - Sistem otomatis mendaftarkan mereka ke database web (status "imported") untuk Polling.
+
+> **TIP/Saran UX**: Jangan langsung menghapus halaman pendaftaran. Cukup ganti isinya dengan pesan penutupan yang ramah dan arahkan mereka untuk melihat "Daftar Peserta" atau "Jadwal Lomba" agar alur kunjungan user tetap berlanjut.
+
+---
 
 *Fokus: Memastikan seluruh halaman terlihat rapi, fungsional, dan proporsional di berbagai ukuran layar perangkat (HP & Tablet).*
 

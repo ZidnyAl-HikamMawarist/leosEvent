@@ -10,6 +10,8 @@
 
     @include('layouts.user._lomba_content')
 
+    @include('layouts.user.cheer-wall')
+
     @include('layouts.user.galeri')
 
     @include('layouts.user.faq')

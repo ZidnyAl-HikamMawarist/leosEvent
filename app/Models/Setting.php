@@ -97,5 +97,6 @@ class Setting extends Model
         'about_btn_text',
         'footer_ig_link',
         'footer_map_link',
+        'tanggal_tm',
     ];
 }

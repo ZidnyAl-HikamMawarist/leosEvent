@@ -6,14 +6,25 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold mb-0">Data Pendaftar</h5>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    @if($hasBatch)
+                        <form action="{{ route('admin.participants.rollback') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan (Rollback) sesi import terakhir? Semua data dari sesi tersebut akan dihapus permanen.')">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-arrow-counterclockwise"></i> Rollback Terakhir
+                            </button>
+                        </form>
+                    @endif
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="bi bi-file-earmark-arrow-up me-1"></i> Import
+                    </button>
                     <a href="{{ route('admin.pendaftaran.export', ['type' => 'excel', 'lomba_id' => request('lomba_id')]) }}"
                         class="btn btn-success btn-sm">
-                        <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
+                        <i class="bi bi-file-earmark-excel me-1"></i> CSV
                     </a>
                     <a href="{{ route('admin.pendaftaran.export', ['type' => 'pdf', 'lomba_id' => request('lomba_id')]) }}"
                         class="btn btn-danger btn-sm">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
                     </a>
                 </div>
             </div>
@@ -39,7 +50,25 @@
             </div>
 
             @if(session('success'))
-                <div class="alert alert-success mt-2">{{ session('success') }}</div>
+                <div class="alert alert-success mt-2 border-0 shadow-sm rounded-3">
+                    <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger mt-2 border-0 shadow-sm rounded-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger mt-2 border-0 shadow-sm rounded-3">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li><i class="bi bi-exclamation-circle me-1"></i> {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             <div class="table-responsive">
@@ -51,6 +80,7 @@
                             <th>Email</th>
                             <th>No. WhatsApp</th>
                             <th>Sekolah</th>
+                            <th>Pembina</th>
                             <th>Mata Lomba</th>
                             <th>Tipe</th>
                             <th>Status</th>
@@ -66,6 +96,10 @@
                                 <td>{{ $p->email ?? '-' }}</td>
                                 <td>{{ $p->no_wa ?? '-' }}</td>
                                 <td>{{ $p->sekolah }}</td>
+                                <td>
+                                    <div class="small fw-bold text-dark">{{ $p->nama_pembina ?? '-' }}</div>
+                                    <div class="small text-muted">{{ $p->no_hp_pembina ?? '-' }}</div>
+                                </td>
                                 <td>
                                     <span class="fw-bold">{{ $p->lomba->nama_lomba ?? 'N/A' }}</span>
                                 </td>
@@ -159,6 +193,57 @@
         </div>
     </div>
     </div>
+    </div>
+
+    {{-- Import Modal --}}
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Peserta (CSV)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('admin.participants.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-primary shadow-sm border-0 rounded-4 mb-4">
+                            <div class="d-flex gap-3">
+                                <div class="fs-3"><i class="bi bi-magic"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Smart Import Aktif!</h6>
+                                    <p class="small mb-0 opacity-75">Sistem otomatis mendeteksi kolom (Nama, WA, Sekolah, dll) & Kategori Lomba. Mendukung format <strong>CSV, TXT,</strong> dan hasil copy-paste <strong>Tab</strong> dari Google Sheets.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small mb-1">Pilih File CSV/GForm</label>
+                            <input type="file" name="file_csv" class="form-control rounded-3" accept=".csv,.txt" required>
+                            <div class="form-text mt-2 small">
+                                <i class="bi bi-info-circle me-1"></i> Pastikan baris pertama berisi nama kolom (Header).
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label fw-bold small mb-1">Pilihan Mata Lomba (Fallback)</label>
+                            <select name="lomba_id" class="form-select rounded-3">
+                                <option value="" selected>-- Gunakan dari File (Auto) --</option>
+                                @foreach($lombas as $l)
+                                    <option value="{{ $l->id }}">{{ $l->nama_lomba }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text mt-2 small text-muted">
+                                Pilih lomba di sini hanya jika file Anda tidak memiliki kolom "Mata Lomba".
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Mulai Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <style>

@@ -30,8 +30,9 @@ class PendaftaranController extends Controller
 
         $pendaftarans = $query->latest()->paginate(15);
         $lombas = Lomba::all();
+        $hasBatch = Pendaftaran::whereNotNull('import_batch')->exists();
 
-        return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas', 'search', 'lomba_id'));
+        return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas', 'search', 'lomba_id', 'hasBatch'));
     }
 
     public function edit($id)

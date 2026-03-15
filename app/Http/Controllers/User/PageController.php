@@ -33,7 +33,10 @@ class PageController extends Controller
                 ->where('event_year', $selectedYear)
                 ->get(),
             'selectedYear' => $selectedYear,
-            'availableYears' => Lomba::distinct()->pluck('event_year')->sortDesc()
+            'availableYears' => Lomba::distinct()->pluck('event_year')->sortDesc(),
+            'supportMessages' => \App\Models\SupportMessage::where('status', 'approved')->latest()->take(10)->get(),
+            'topParticipants' => \App\Models\Participant::orderBy('vote_count', 'desc')->take(3)->get(),
+            'setting' => \App\Models\Setting::first(),
         ]);
     }
 
@@ -65,17 +68,33 @@ class PageController extends Controller
 
     public function pendaftaran()
     {
+        $setting = Setting::first();
+        $isRegistrationClosed = false;
+        
+        if ($setting && $setting->tanggal_tm) {
+            if (\Carbon\Carbon::now()->greaterThan(\Carbon\Carbon::parse($setting->tanggal_tm))) {
+                $isRegistrationClosed = true;
+            }
+        }
+
         $lombas = Lomba::where('status', 'aktif')->get();
         // If there is a lomba_id in query params, get it
         $selectedLomba = null;
         if (request()->has('lomba_id')) {
             $selectedLomba = Lomba::find(request('lomba_id'));
         }
-        return view('layouts.user.pendaftaran', compact('lombas', 'selectedLomba'));
+        return view('layouts.user.pendaftaran', compact('lombas', 'selectedLomba', 'isRegistrationClosed', 'setting'));
     }
 
     public function storePendaftaran(Request $request)
     {
+        $setting = Setting::first();
+        if ($setting && $setting->tanggal_tm) {
+            if (\Carbon\Carbon::now()->greaterThan(\Carbon\Carbon::parse($setting->tanggal_tm))) {
+                return back()->with('error', 'Technical Meeting sudah dilaksanakan, pendaftaran sudah ditutup! Silakan hubungi panitia jika ada kendala.');
+            }
+        }
+
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255',
@@ -121,6 +140,12 @@ class PageController extends Controller
         }
 
         $pendaftaran = Pendaftaran::create($data);
+
+        // Tambahkan ke tabel participants agar bisa di-vote (Polling)
+        \App\Models\Participant::firstOrCreate(
+            ['nama' => $pendaftaran->nama, 'lomba_id' => $pendaftaran->lomba_id],
+            ['sekolah' => $pendaftaran->sekolah, 'source' => 'web']
+        );
 
         return redirect()->route('pendaftaran')->with([
             'success' => 'Pendaftaran berhasil dikirim! Silakan ikuti instruksi selanjutnya.',

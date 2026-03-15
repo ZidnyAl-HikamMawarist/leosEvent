@@ -9,6 +9,10 @@ class LombaDetailController extends Controller
 {
     public function show(Lomba $lomba)
     {
-        return view('layouts.user.lomba-detail', compact('lomba'));
+        $participants = \App\Models\Participant::where('lomba_id', $lomba->id)
+            ->orderBy('vote_count', 'desc')
+            ->get();
+            
+        return view('layouts.user.lomba-detail', compact('lomba', 'participants'));
     }
 }

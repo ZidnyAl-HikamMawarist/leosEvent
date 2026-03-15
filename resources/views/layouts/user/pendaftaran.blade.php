@@ -8,6 +8,7 @@
 
         <div class="container position-relative z-1 py-5 mt-5">
             <div class="row align-items-center g-5 justify-content-center">
+                @if(!$isRegistrationClosed)
                 <!-- Left Side: Info -->
                 <div class="col-lg-5 col-xl-4 d-none d-lg-block" data-aos="fade-right">
                     <div class="registration-info">
@@ -45,124 +46,148 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <!-- Right Side: Form -->
-                <div class="col-lg-7 col-xl-6" data-aos="fade-left">
+                <div class="{{ $isRegistrationClosed ? 'col-lg-8 col-xl-7' : 'col-lg-7 col-xl-6' }}" data-aos="{{ $isRegistrationClosed ? 'zoom-in' : 'fade-left' }}">
                     <div class="premium-card p-5 bg-glass border border-white border-opacity-10 shadow-2xl">
-                        <div class="brand-badge text-center mb-5">
-                            <div class="mb-3">
-                                @if($setting && $setting->logo)
-                                    {{-- Logo tampil penuh tanpa lingkaran pembungkus yang tebal --}}
-                                    <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" class="img-fluid"
-                                        style="max-height: 100px; width: auto; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));">
-                                @else
-                                    {{-- Fallback jika logo tidak ada --}}
-                                    <div
-                                        class="d-inline-flex bg-primary bg-opacity-10 p-4 rounded-circle border border-primary border-opacity-25">
-                                        <i class="bi bi-intersect fs-1 text-primary"></i>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <h2 class="fw-bold text-white mb-1">{{ $setting->reg_form_title ?? 'Registration Form' }}</h2>
-                            <p class="text-muted">{{ $setting->reg_form_subtitle ?? 'Fill in your details to get started' }}</p>
+                        <div class="brand-badge text-center {{ !$isRegistrationClosed ? 'mb-5' : '' }}">
+                            @if(!$isRegistrationClosed)
+                                <div class="mb-3">
+                                    @if($setting && $setting->logo)
+                                        <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" class="img-fluid"
+                                            style="max-height: 100px; width: auto; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.1));">
+                                    @else
+                                        <div class="d-inline-flex bg-primary bg-opacity-10 p-4 rounded-circle border border-primary border-opacity-25">
+                                            <i class="bi bi-intersect fs-1 text-primary"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <h2 class="fw-bold text-white mb-1">{{ $setting->reg_form_title ?? 'Registration Form' }}</h2>
+                                <p class="text-muted">{{ $setting->reg_form_subtitle ?? 'Fill in your details to get started' }}</p>
+                            @endif
                         </div>
 
-
-
-
-
-                        <form action="{{ route('pendaftaran.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
-                            @csrf
-
-                            <div class="col-md-12">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2">Pilih Mata Lomba</label>
-                                    <select name="lomba_id" id="lomba_select" class="form-select glass-input-field" required>
-                                        <option value="" disabled {{ !isset($selectedLomba) ? 'selected' : '' }}>-- Pilih Lomba --</option>
-                                        @foreach($lombas as $l)
-                                            <option value="{{ $l->id }}" 
-                                                data-tipe="{{ $l->tipe_lomba }}" 
-                                                data-wa="{{ $l->whatsapp_panitia }}"
-                                                data-grup="{{ $l->link_grup_wa }}"
-                                                {{ (isset($selectedLomba) && $selectedLomba->id == $l->id) ? 'selected' : '' }} 
-                                                class="bg-white text-dark">
-                                                {{ $l->nama_lomba }} ({{ ucfirst($l->tipe_lomba) }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                        @if($isRegistrationClosed)
+                            <div class="text-center py-4" data-aos="zoom-in">
+                                <div class="mb-4">
+                                    <div class="d-inline-flex bg-warning bg-opacity-10 p-4 rounded-circle border border-warning border-opacity-25 shadow-lg mb-3">
+                                        <i class="bi bi-calendar-x fs-1 text-warning"></i>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2" id="label_nama">Nama Peserta</label>
-                                    <input type="text" name="nama" class="form-control glass-input-field"
-                                        placeholder="Masukkan nama lengkap" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2">Asal Sekolah</label>
-                                    <input type="text" name="sekolah" class="form-control glass-input-field"
-                                        placeholder="Contoh: SMP Negeri 1 Jakarta" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2" id="label_email">Email Peserta</label>
-                                    <input type="email" name="email" class="form-control glass-input-field"
-                                        placeholder="email@anda.com" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2" id="label_no_wa">No. HP / WhatsApp Peserta</label>
-                                    <input type="text" name="no_wa" class="form-control glass-input-field"
-                                        placeholder="Contoh: 08123456789" required>
-                                </div>
-                            </div>
-
-                            <!-- Common Fields for both Solo and Kelompok -->
-                            <div class="col-md-6">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2">Nama Pembina</label>
-                                    <input type="text" name="nama_pembina" class="form-control glass-input-field"
-                                        placeholder="Masukkan nama pembina" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2">No. HP Pembina</label>
-                                    <input type="text" name="no_hp_pembina" class="form-control glass-input-field"
-                                        placeholder="Contoh: 08123456789" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-12">
-                                <div class="glass-input-group">
-                                    <label class="form-label mb-2">Metode Pembayaran</label>
-                                    <select name="metode_pembayaran" id="pembayaran_select" class="form-select glass-input-field" required>
-                                        <option value="transfer">TRANSFER</option>
-                                        <option value="tunai">TUNAI (Pada saat Technical Meeting)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="col-12 mt-5">
-                                <button type="submit" class="btn btn-primary-custom w-100 py-3 fs-5 rounded-pill shadow-lg">
-                                    Daftar Sekarang <i class="bi bi-send-fill ms-2"></i>
-                                </button>
-                                <p class="text-center text-muted mt-4 small opacity-75">
-                                    Pastikan data yang diisi sudah sesuai. <br>
-                                    Setelah mendaftar, silakan hubungi panitia untuk validasi.
+                                <h2 class="fw-bold text-white mb-3">Pendaftaran Sudah Ditutup</h2>
+                                <p class="text-muted mb-5 px-md-4">
+                                    Technical Meeting telah dilaksanakan dan pendaftaran resmi berakhir. 
+                                    Pantau terus keseruan event kami melalui halaman galeri dan pengumuman!
                                 </p>
+                                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-center">
+                                    <a href="{{ route('home') }}#lomba" class="btn btn-primary-custom rounded-pill px-4 py-3 shadow-lg d-flex align-items-center justify-content-center" style="min-width: 220px; white-space: nowrap;">
+                                        <i class="bi bi-trophy me-2"></i> Lihat Daftar Lomba
+                                    </a>
+                                    <a href="{{ route('home') }}#galeri" class="btn btn-outline-custom rounded-pill px-4 py-3 d-flex align-items-center justify-content-center" style="min-width: 220px; white-space: nowrap;">
+                                        <i class="bi bi-images me-2"></i> Galeri Event
+                                    </a>
+                                </div>
+                                <div class="mt-5 pt-4 border-top border-white border-opacity-10">
+                                    <p class="text-muted small">Ada pertanyaan mendesak? Hubungi kami di:</p>
+                                    <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $setting->kontak ?? '') }}" class="btn btn-success rounded-pill px-4 py-2 btn-sm" style="background: #25D366; border: none;">
+                                        <i class="bi bi-whatsapp me-2"></i> Hubungi Panitia
+                                    </a>
+                                </div>
                             </div>
-                        </form>
+                        @else
+                            <form action="{{ route('pendaftaran.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
+                                @csrf
+
+                                <div class="col-md-12">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2">Pilih Mata Lomba</label>
+                                        <select name="lomba_id" id="lomba_select" class="form-select glass-input-field" required>
+                                            <option value="" disabled {{ !isset($selectedLomba) ? 'selected' : '' }}>-- Pilih Lomba --</option>
+                                            @foreach($lombas as $l)
+                                                <option value="{{ $l->id }}" 
+                                                    data-tipe="{{ $l->tipe_lomba }}" 
+                                                    data-wa="{{ $l->whatsapp_panitia }}"
+                                                    data-grup="{{ $l->link_grup_wa }}"
+                                                    {{ (isset($selectedLomba) && $selectedLomba->id == $l->id) ? 'selected' : '' }} 
+                                                    class="bg-white text-dark">
+                                                    {{ $l->nama_lomba }} ({{ ucfirst($l->tipe_lomba) }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2" id="label_nama">Nama Peserta</label>
+                                        <input type="text" name="nama" class="form-control glass-input-field"
+                                            placeholder="Masukkan nama lengkap" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2">Asal Sekolah</label>
+                                        <input type="text" name="sekolah" class="form-control glass-input-field"
+                                            placeholder="Contoh: SMP Negeri 1 Jakarta" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2" id="label_email">Email Peserta</label>
+                                        <input type="email" name="email" class="form-control glass-input-field"
+                                            placeholder="email@anda.com" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2" id="label_no_wa">No. HP / WhatsApp Peserta</label>
+                                        <input type="text" name="no_wa" class="form-control glass-input-field"
+                                            placeholder="Contoh: 08123456789" required>
+                                    </div>
+                                </div>
+
+                                <!-- Common Fields for both Solo and Kelompok -->
+                                <div class="col-md-6">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2">Nama Pembina</label>
+                                        <input type="text" name="nama_pembina" class="form-control glass-input-field"
+                                            placeholder="Masukkan nama pembina" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2">No. HP Pembina</label>
+                                        <input type="text" name="no_hp_pembina" class="form-control glass-input-field"
+                                            placeholder="Contoh: 08123456789" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="glass-input-group">
+                                        <label class="form-label mb-2">Metode Pembayaran</label>
+                                        <select name="metode_pembayaran" id="pembayaran_select" class="form-select glass-input-field" required>
+                                            <option value="transfer">TRANSFER</option>
+                                            <option value="tunai">TUNAI (Pada saat Technical Meeting)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-5">
+                                    <button type="submit" class="btn btn-primary-custom w-100 py-3 fs-5 rounded-pill shadow-lg">
+                                        Daftar Sekarang <i class="bi bi-send-fill ms-2"></i>
+                                    </button>
+                                    <p class="text-center text-muted mt-4 small opacity-75">
+                                        Pastikan data yang diisi sudah sesuai. <br>
+                                        Setelah mendaftar, silakan hubungi panitia untuk validasi.
+                                    </p>
+                                </div>
+                            </form>
+                        @endif
 
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {

@@ -66,6 +66,61 @@
                                             value="{{ $setting->reg_form_subtitle ?? 'Fill in your details to get started' }}">
                                     </div>
 
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-danger">Batas Waktu Pendaftaran (Tanggal TM)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0">
+                                                <i class="bi bi-calendar-event text-danger"></i>
+                                            </span>
+                                            <input type="text" name="tanggal_tm" id="tanggal_tm_picker" class="form-control border-start-0"
+                                                value="{{ $setting && $setting->tanggal_tm ? \Carbon\Carbon::parse($setting->tanggal_tm)->format('Y-m-d H:i') : '' }}"
+                                                placeholder="Pilih Tanggal dan Waktu...">
+                                        </div>
+                                        <small class="text-muted">Pendaftaran akan otomatis ditutup setelah waktu ini. Gunakan pemilih tanggal di atas.</small>
+                                    </div>
+
+                                    <!-- Flatpickr CSS -->
+                                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+                                    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+                                    <style>
+                                        .flatpickr-calendar {
+                                            box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+                                            border: 1px solid rgba(0,0,0,0.05) !important;
+                                            border-radius: 12px !important;
+                                        }
+                                        .dark-mode .flatpickr-calendar {
+                                            background: #1e1e22 !important;
+                                            border-color: rgba(255,255,255,0.1) !important;
+                                            color: white !important;
+                                        }
+                                        .dark-mode .flatpickr-day { color: #e2e8f0 !important; }
+                                        .dark-mode .flatpickr-months .flatpickr-month,
+                                        .dark-mode .flatpickr-weekday {
+                                            color: #e2e8f0 !important;
+                                            fill: #e2e8f0 !important;
+                                        }
+                                        .dark-mode .flatpickr-current-month .flatpickr-monthDropdown-months {
+                                            background: #1e1e22 !important;
+                                        }
+                                        .dark-mode .numInputWrapper span.arrowUp:after { border-bottom-color: #94a3b8 !important; }
+                                        .dark-mode .numInputWrapper span.arrowDown:after { border-top-color: #94a3b8 !important; }
+                                    </style>
+
+                                    <!-- Flatpickr JS -->
+                                    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            flatpickr("#tanggal_tm_picker", {
+                                                enableTime: true,
+                                                dateFormat: "Y-m-d H:i",
+                                                time_24hr: true,
+                                                allowInput: true,
+                                                minDate: "today",
+                                                monthSelectorType: 'static'
+                                            });
+                                        });
+                                    </script>
+
                                     <div class="alert alert-info mt-4">
                                         <i class="bi bi-info-circle-fill me-2"></i>
                                         Bidang input pendaftaran (seperti Nama, Email, dll) dikelola melalui pengaturan

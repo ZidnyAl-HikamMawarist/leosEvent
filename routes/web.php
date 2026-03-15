@@ -25,6 +25,8 @@ Route::get('/pendaftaran', [PageController::class, 'pendaftaran'])->name('pendaf
 Route::post('/pendaftaran', [PageController::class, 'storePendaftaran'])->name('pendaftaran.store');
 Route::get('/kontak', [PageController::class, 'kontak'])->name('kontak');
 Route::get('/faq', [PageController::class, 'faq'])->name('faq');
+Route::post('/support-message', [\App\Http\Controllers\User\SupportMessageController::class, 'store'])->name('support-message.store');
+Route::post('/vote', [\App\Http\Controllers\User\VoteController::class, 'vote'])->name('vote.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +61,9 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/settings/informasi', [SettingController::class, 'informasi'])->name('admin.settings.informasi');
     Route::get('/settings/hero', [SettingController::class, 'hero'])->name('admin.settings.hero');
     Route::get('/settings/process', [SettingController::class, 'processFlow'])->name('admin.settings.process');
+
+    Route::post('/participants/import', [\App\Http\Controllers\Admin\ParticipantImportController::class, 'store'])->name('admin.participants.import');
+    Route::post('/participants/rollback', [\App\Http\Controllers\Admin\ParticipantImportController::class, 'rollback'])->name('admin.participants.rollback');
 });
 
 /*
