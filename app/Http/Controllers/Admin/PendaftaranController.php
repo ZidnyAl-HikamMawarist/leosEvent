@@ -30,7 +30,8 @@ class PendaftaranController extends Controller
 
         $pendaftarans = $query->latest()->paginate(15);
         $lombas = Lomba::all();
-        $hasBatch = Pendaftaran::whereNotNull('import_batch')->exists();
+        $hasBatch = Pendaftaran::whereNotNull('import_batch')->exists() || 
+                    \App\Models\Participant::whereNotNull('import_batch')->exists();
 
         return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas', 'search', 'lomba_id', 'hasBatch'));
     }
@@ -122,5 +123,27 @@ class PendaftaranController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function deleteAll()
+    {
+        $count = Pendaftaran::count();
+        Pendaftaran::truncate();
+        // Also clean up participants that were imported
+        \App\Models\Participant::where('source', 'import')->delete();
+
+        return back()->with('success', "Berhasil menghapus semua $count data pendaftar.");
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:pendaftarans,id',
+        ]);
+
+        $count = Pendaftaran::whereIn('id', $request->ids)->delete();
+
+        return back()->with('success', "Berhasil menghapus $count data pendaftar terpilih.");
     }
 }

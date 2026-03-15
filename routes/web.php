@@ -46,10 +46,12 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::resource('faq', FaqController::class);
 
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('admin.pendaftaran.index');
+    Route::get('/pendaftaran/export', [PendaftaranController::class, 'export'])->name('admin.pendaftaran.export');
+    Route::delete('/pendaftaran/delete-all', [PendaftaranController::class, 'deleteAll'])->name('admin.pendaftaran.deleteAll');
+    Route::post('/pendaftaran/bulk-delete', [PendaftaranController::class, 'bulkDelete'])->name('admin.pendaftaran.bulkDelete');
     Route::get('/pendaftaran/{id}/edit', [PendaftaranController::class, 'edit'])->name('admin.pendaftaran.edit');
     Route::put('/pendaftaran/{id}', [PendaftaranController::class, 'update'])->name('admin.pendaftaran.update');
     Route::delete('/pendaftaran/{id}', [PendaftaranController::class, 'destroy'])->name('admin.pendaftaran.destroy');
-    Route::get('/pendaftaran/export', [PendaftaranController::class, 'export'])->name('admin.pendaftaran.export');
 
     // Dynamic Settings Routes
     Route::get('/settings', [SettingController::class, 'index'])->name('admin.settings');

@@ -85,8 +85,10 @@ class ParticipantImportController extends Controller
                     'sekolah' => null,
                     'no_wa' => null,
                     'email' => null,
-                    'nama_pembina' => null,
                     'no_hp_pembina' => null,
+                    'tanggal' => null,
+                    'status' => 'confirmed',
+                    'metode_pembayaran' => 'tunai',
                 ];
 
                 // STEP A: Find Lomba first by scanning ALL cells in the row
@@ -140,11 +142,33 @@ class ParticipantImportController extends Controller
                         else $pendaftarData['no_wa'] = $val;
                     }
                     if (str_contains($colTitle, 'email')) $pendaftarData['email'] = $val;
+                    if (str_contains($colTitle, 'timestamp') || str_contains($colTitle, 'tanggal')) $pendaftarData['tanggal'] = $val;
+                    if (str_contains($colTitle, 'pembayaran') || str_contains($colTitle, 'metode') || str_contains($colTitle, 'bayar')) {
+                        $pVal = strtolower(trim($val));
+                        if (str_contains($pVal, 'transfer')) {
+                            $pendaftarData['metode_pembayaran'] = 'transfer';
+                            $pendaftarData['status'] = 'confirmed';
+                        } else if (str_contains($pVal, 'tunai')) {
+                            $pendaftarData['metode_pembayaran'] = 'tunai';
+                            $pendaftarData['status'] = 'pending';
+                        }
+                    }
                 }
 
                 if (empty($pendaftarData['nama'])) {
                     $skipCount++;
                     continue;
+                }
+
+                // Parse Timestamp if exists
+                $createdAt = now();
+                if (!empty($pendaftarData['tanggal'])) {
+                    try {
+                        // Carbon handles various formats, including GForm common formats
+                        $createdAt = \Carbon\Carbon::parse(str_replace('/', '-', $pendaftarData['tanggal']));
+                    } catch (\Exception $e) {
+                        $createdAt = now();
+                    }
                 }
 
                 // --- 4. DATA SAVING ---
@@ -156,14 +180,22 @@ class ParticipantImportController extends Controller
                     'lomba_id' => $foundLombaId,
                     'nama_pembina' => $pendaftarData['nama_pembina'],
                     'no_hp_pembina' => $pendaftarData['no_hp_pembina'],
-                    'status' => 'confirmed',
-                    'metode_pembayaran' => 'tunai', // Database only allows 'tunai' or 'transfer'
+                    'status' => $pendaftarData['status'],
+                    'metode_pembayaran' => $pendaftarData['metode_pembayaran'], 
                     'import_batch' => $batchId,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
                 ]);
 
                 \App\Models\Participant::updateOrCreate(
                     ['nama' => $pendaftarData['nama'], 'lomba_id' => $foundLombaId],
-                    ['sekolah' => $pendaftarData['sekolah'], 'source' => 'import', 'import_batch' => $batchId]
+                    [
+                        'sekolah' => $pendaftarData['sekolah'], 
+                        'source' => 'import', 
+                        'import_batch' => $batchId,
+                        'created_at' => $createdAt,
+                        'updated_at' => $createdAt,
+                    ]
                 );
 
                 $successCount++;
@@ -183,9 +215,18 @@ class ParticipantImportController extends Controller
 
     public function rollback()
     {
+        // Try to get latest batch from Pendaftaran first
         $lastBatch = \App\Models\Pendaftaran::whereNotNull('import_batch')
             ->orderBy('id', 'desc')
             ->first();
+        
+        // If not found, try from Participant (sometimes data might only exists there)
+        if (!$lastBatch) {
+            $lastBatch = \App\Models\Participant::whereNotNull('import_batch')
+                ->where('source', 'import')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
 
         if (!$lastBatch) {
             return back()->with('error', 'Tidak ada data import yang bisa di-rollback.');

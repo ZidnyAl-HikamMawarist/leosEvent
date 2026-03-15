@@ -20,6 +20,8 @@ class Pendaftaran extends Model
         'formulir_pendaftaran',
         'metode_pembayaran',
         'import_batch',
+        'created_at',
+        'updated_at',
     ];
 
     public function lomba()

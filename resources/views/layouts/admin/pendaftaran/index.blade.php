@@ -15,6 +15,13 @@
                             </button>
                         </form>
                     @endif
+                    <form action="{{ route('admin.pendaftaran.deleteAll') }}" method="POST" class="d-inline" onsubmit="return confirm('⚠️ PERINGATAN!\n\nAnda akan menghapus SEMUA data pendaftar.\nTindakan ini TIDAK BISA dibatalkan!\n\nLanjutkan?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash3 me-1"></i> Hapus Semua
+                        </button>
+                    </form>
                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="bi bi-file-earmark-arrow-up me-1"></i> Import
                     </button>
@@ -75,6 +82,9 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th width="40" class="text-center col-checkbox">
+                                <input type="checkbox" class="form-check-input" id="selectAll" title="Pilih Semua">
+                            </th>
                             <th width="50">No</th>
                             <th>Nama</th>
                             <th>Email</th>
@@ -91,6 +101,9 @@
                     <tbody>
                         @forelse($pendaftarans as $p)
                             <tr>
+                                <td class="text-center col-checkbox">
+                                    <input type="checkbox" class="form-check-input row-checkbox" value="{{ $p->id }}">
+                                </td>
                                 <td>{{ ($pendaftarans->currentPage() - 1) * $pendaftarans->perPage() + $loop->iteration }}</td>
                                 <td class="fw-bold">{{ $p->nama }}</td>
                                 <td>{{ $p->email ?? '-' }}</td>
@@ -153,7 +166,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="12" class="text-center py-5 text-muted">
                                     <i class="bi bi-people display-4 d-block mb-3 opacity-25"></i>
                                     Belum ada pendaftar yang ditemukan.
                                 </td>
@@ -264,5 +277,135 @@
                 overflow: visible !important;
             }
         }
+
+        /* Floating Bulk Action Bar */
+        #bulkActionBar {
+            position: fixed;
+            bottom: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            transition: bottom 0.3s ease;
+            min-width: 320px;
+        }
+        #bulkActionBar.show {
+            bottom: 24px;
+        }
+
+        /* Checkbox column hidden by default */
+        .col-checkbox {
+            display: none;
+            width: 40px;
+        }
+        .selection-mode .col-checkbox {
+            display: table-cell;
+        }
+        /* Highlight selected rows */
+        .selection-mode tbody tr.selected {
+            background-color: rgba(var(--bs-primary-rgb), 0.08) !important;
+        }
+        .selection-mode tbody tr {
+            cursor: pointer;
+        }
     </style>
+
+    {{-- Floating Bulk Delete Bar --}}
+    <div id="bulkActionBar" class="bg-dark text-white rounded-pill shadow-lg px-4 py-3 d-flex align-items-center gap-3">
+        <i class="bi bi-check2-square fs-5"></i>
+        <span><strong id="selectedCount">0</strong> data dipilih</span>
+        <form id="bulkDeleteForm" action="{{ route('admin.pendaftaran.bulkDelete') }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('Hapus semua data yang dipilih? Tindakan ini tidak bisa dibatalkan.')">
+            @csrf
+            <div id="bulkDeleteIds"></div>
+            <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                <i class="bi bi-trash me-1"></i> Hapus Terpilih
+            </button>
+        </form>
+        <button type="button" class="btn btn-outline-light btn-sm rounded-pill ms-1" onclick="exitSelectionMode()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <script>
+        const dataTable = document.querySelector('.table');
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+        const bulkActionBar = document.getElementById('bulkActionBar');
+        const selectedCountEl = document.getElementById('selectedCount');
+        const bulkDeleteIds = document.getElementById('bulkDeleteIds');
+        let selectionMode = false;
+
+        // Enter selection mode
+        function enterSelectionMode() {
+            if (selectionMode) return;
+            selectionMode = true;
+            dataTable.classList.add('selection-mode');
+        }
+
+        // Exit selection mode
+        function exitSelectionMode() {
+            selectionMode = false;
+            dataTable.classList.remove('selection-mode');
+            selectAllCheckbox.checked = false;
+            rowCheckboxes.forEach(cb => {
+                cb.checked = false;
+                cb.closest('tr').classList.remove('selected');
+            });
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.row-checkbox:checked');
+            const count = checked.length;
+            selectedCountEl.textContent = count;
+
+            if (count > 0) {
+                bulkActionBar.classList.add('show');
+            } else {
+                bulkActionBar.classList.remove('show');
+            }
+
+            bulkDeleteIds.innerHTML = '';
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                bulkDeleteIds.appendChild(input);
+            });
+
+            selectAllCheckbox.checked = count > 0 && count === rowCheckboxes.length;
+            selectAllCheckbox.indeterminate = count > 0 && count < rowCheckboxes.length;
+        }
+
+        // Click on a row → enter selection mode & toggle that row
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't trigger if user clicked a button, link, dropdown, or the checkbox itself
+                if (e.target.closest('a, button, .dropdown, .form-check-input, form')) return;
+
+                enterSelectionMode();
+                const cb = this.querySelector('.row-checkbox');
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    this.classList.toggle('selected', cb.checked);
+                    updateBulkBar();
+                }
+            });
+        });
+
+        selectAllCheckbox.addEventListener('change', function() {
+            rowCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+                cb.closest('tr').classList.toggle('selected', this.checked);
+            });
+            updateBulkBar();
+        });
+
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                this.closest('tr').classList.toggle('selected', this.checked);
+                updateBulkBar();
+            });
+        });
+    </script>
 @endsection
