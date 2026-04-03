@@ -66,6 +66,7 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
 
     Route::post('/participants/import', [\App\Http\Controllers\Admin\ParticipantImportController::class, 'store'])->name('admin.participants.import');
     Route::post('/participants/rollback', [\App\Http\Controllers\Admin\ParticipantImportController::class, 'rollback'])->name('admin.participants.rollback');
+    Route::get('/pendaftaran/daftar-hadir', [PendaftaranController::class, 'daftarHadir'])->name('admin.pendaftaran.daftarHadir');
 });
 
 /*

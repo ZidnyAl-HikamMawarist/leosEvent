@@ -9,8 +9,8 @@ class ParticipantImportController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'file_csv' => 'required|file|mimes:csv,txt',
+$request->validate([
+            'file_csv' => 'required|file|mimes:csv,txt,text/plain,xlsx,xls|max:5120',  // Flexible MIME + size limit 5MB
         ]);
 
         $file = $request->file('file_csv');
@@ -73,9 +73,11 @@ class ParticipantImportController extends Controller
         $skipCount = 0;
         $errors = [];
         $batchId = 'batch_' . time();
+        $rowNum = 1; // Track row number (excluding header)
 
         // --- 3. BRUTE-FORCE ROW SCANNING ---
         while (($data = fgetcsv($handle, 0, $delimiter)) !== FALSE) {
+            $rowNum++;
             try {
                 if (empty(array_filter($data, fn($v) => !is_null($v) && trim($v) !== ''))) continue;
 
@@ -85,6 +87,7 @@ class ParticipantImportController extends Controller
                     'sekolah' => null,
                     'no_wa' => null,
                     'email' => null,
+                    'nama_pembina' => null,
                     'no_hp_pembina' => null,
                     'tanggal' => null,
                     'status' => 'confirmed',
@@ -118,6 +121,8 @@ class ParticipantImportController extends Controller
 
                 if (!$foundLombaId) {
                     $skipCount++;
+                    $preview = implode(' | ', array_filter(array_slice($data, 0, 5), fn($v) => trim($v) !== ''));
+                    $errors[] = "Baris $rowNum: Kategori Lomba tidak ditemukan. ($preview)";
                     continue;
                 }
 
@@ -155,8 +160,22 @@ class ParticipantImportController extends Controller
                     }
                 }
 
-                if (empty($pendaftarData['nama'])) {
+                if (empty($pendaftarData['nama']) || empty($pendaftarData['sekolah'])) {
                     $skipCount++;
+                    $preview = implode(' | ', array_filter(array_slice($data, 0, 5), fn($v) => trim($v) !== ''));
+                    $errors[] = "Baris $rowNum: Nama atau Sekolah kosong. ($preview)";
+                    continue;
+                }
+
+                // CHECK DUPLIKAT SEBELUM CREATE
+                $existing = \App\Models\Pendaftaran::where('nama', $pendaftarData['nama'])
+                    ->where('sekolah', $pendaftarData['sekolah'])
+                    ->where('lomba_id', $foundLombaId)
+                    ->first();
+                
+                if ($existing) {
+                    $skipCount++;
+                    $errors[] = "Baris $rowNum: Duplikat '$pendaftarData[nama]' dari $pendaftarData[sekolah] ($foundLombaId). Skip.";
                     continue;
                 }
 
@@ -200,17 +219,26 @@ class ParticipantImportController extends Controller
 
                 $successCount++;
             } catch (\Exception $e) {
-                \Log::error("Import error: " . $e->getMessage());
+                \Log::error("Import error baris $rowNum: " . $e->getMessage());
                 $skipCount++;
+                $errors[] = "Baris $rowNum: " . $e->getMessage();
             }
         }
         fclose($handle);
 
         if ($successCount == 0) {
-            return back()->with('error', "Gagal mengimpor. $skipCount data dilewati. Pastikan format file sesuai atau pilih Mata Lomba manual.");
+            $errorMsg = "Gagal mengimpor. $skipCount data dilewati.";
+            if (!empty($errors)) $errorMsg .= " Detail: " . implode(' | ', array_slice($errors, 0, 3));
+            return back()->with('error', $errorMsg);
         }
 
-        return back()->with('success', "Berhasil mengimpor $successCount peserta. ($skipCount data dilewati).");
+        $msg = "Berhasil mengimpor $successCount peserta.";
+        if ($skipCount > 0) {
+            $msg .= " ($skipCount dilewati";
+            if (!empty($errors)) $msg .= ": " . implode(' | ', array_slice($errors, 0, 3));
+            $msg .= ")";
+        }
+        return back()->with('success', $msg);
     }
 
     public function rollback()

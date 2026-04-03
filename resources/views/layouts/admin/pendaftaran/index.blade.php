@@ -33,6 +33,9 @@
                         class="btn btn-danger btn-sm">
                         <i class="bi bi-file-earmark-pdf me-1"></i> PDF
                     </a>
+                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#daftarHadirModal" title="Pilih filter Daftar Hadir">
+                        <i class="bi bi-clipboard-check me-1"></i> Daftar Hadir
+                    </button>
                 </div>
             </div>
 
@@ -195,18 +198,70 @@
                 </div>
             </div>
 
-            <script>
+                <script>
                 function goToPage() {
                     const page = document.getElementById('manual-page').value;
                     const url = new URL(window.location.href);
                     url.searchParams.set('page', page);
                     window.location.href = url.toString();
                 }
+
+                function generateDaftarHadir() {
+                    const lombaId = document.getElementById('daftarHadirLomba').value;
+                    const jumlahBaris = document.getElementById('daftarHadirJumlah').value;
+                    let url = '{{ route("admin.pendaftaran.daftarHadir") }}';
+                    if (lombaId) url += '?lomba_id=' + lombaId;
+                    if (jumlahBaris) url += (lombaId ? '&' : '?') + 'jumlah_baris=' + jumlahBaris;
+                    window.open(url, '_blank');
+                    $('#daftarHadirModal').modal('hide');
+                }
             </script>
         </div>
     </div>
     </div>
     </div>
+
+   
+{{-- Daftar Hadir Filter Modal --}}
+<div class="modal fade" id="daftarHadirModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Pilih Filter Daftar Hadir</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="daftarHadirForm">
+                    <!-- Bagian Pilih Mata Lomba -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Mata Lomba</label>
+                        <select name="lomba_id" class="form-select" id="daftarHadirLomba">
+                            <option value="">Semua Lomba</option>
+                            @foreach($lombas as $l)
+                                <option value="{{ $l->id }}" {{ request('lomba_id') == $l->id ? 'selected' : '' }}>
+                                    {{ $l->nama_lomba }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Bagian Jumlah Baris -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Jumlah Baris <span class="text-muted small">(min: jumlah peserta)</span></label>
+                        <input type="number" name="jumlah_baris" class="form-control" id="daftarHadirJumlah" value="30" min="1" max="100">
+                        <div class="form-text small">Peserta terisi, sisa kosong hingga jumlah ini</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="generateDaftarHadir()">
+                    <i class="bi bi-printer"></i> Generate & Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     {{-- Import Modal --}}
     <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">

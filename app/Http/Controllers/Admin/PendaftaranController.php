@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pendaftaran;
 use App\Models\Lomba;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PendaftaranController extends Controller
 {
@@ -34,6 +35,34 @@ class PendaftaranController extends Controller
                     \App\Models\Participant::whereNotNull('import_batch')->exists();
 
         return view('layouts.admin.pendaftaran.index', compact('pendaftarans', 'lombas', 'search', 'lomba_id', 'hasBatch'));
+    }
+
+    public function daftarHadir(Request $request)
+    {
+        $lomba_id = $request->get('lomba_id');
+
+        $query = Pendaftaran::with('lomba')
+            ->when($lomba_id, function($q) use ($lomba_id) {
+                $q->where('lomba_id', $lomba_id);
+            })
+            ->orderBy('nama', 'asc');  // Alphabetical by nama
+
+        $data = $query->get();
+
+        $lombaTitle = $lomba_id 
+            ? ($data->first()->lomba->nama_lomba ?? 'Unknown Lomba') 
+            : 'SEMUA LOMBA';
+
+        $jumlah_baris = max((int) $request->get('jumlah_baris', 30), $data->count());
+        $pdf = Pdf::loadView('layouts.admin.pendaftaran.daftar_hadir_pdf', compact('data', 'lombaTitle', 'jumlah_baris'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['isHtml5ParserEnabled' => true, 'isPhpEnabled' => true]);
+
+        $filename = $lomba_id 
+            ? "daftar_hadir_" . strtolower(str_replace(' ', '_', $lombaTitle)) . "_" . date('Y-m-d') . ".pdf"
+            : "daftar_hadir_semua_" . date('Y-m-d') . ".pdf";
+
+        return $pdf->download($filename);
     }
 
     public function edit($id)
@@ -147,3 +176,4 @@ class PendaftaranController extends Controller
         return back()->with('success', "Berhasil menghapus $count data pendaftar terpilih.");
     }
 }
+
