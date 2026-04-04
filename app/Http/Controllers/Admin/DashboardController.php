@@ -29,6 +29,7 @@ class DashboardController extends Controller
 
         // Recent registrations
         $recentRegistrations = Pendaftaran::with('lomba')
+            ->where('created_at', '<=', now())
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

@@ -4,9 +4,9 @@
 @section('content')
     <div class="card">
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 pendaftar-toolbar">
                 <h5 class="fw-bold mb-0">Data Pendaftar</h5>
-                <div class="d-flex gap-2 align-items-center">
+                <div class="d-flex gap-2 align-items-center pendaftar-toolbar-actions">
                     @if($hasBatch)
                         <form action="{{ route('admin.participants.rollback') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan (Rollback) sesi import terakhir? Semua data dari sesi tersebut akan dihapus permanen.')">
                             @csrf
@@ -41,7 +41,7 @@
 
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <form action="{{ route('admin.pendaftaran.index') }}" method="GET" class="d-flex gap-2">
+                    <form action="{{ route('admin.pendaftaran.index') }}" method="GET" class="d-flex gap-2 pendaftar-filter-form">
                         <select name="lomba_id" class="form-select" onchange="this.form.submit()">
                             <option value="">Semua Mata Lomba</option>
                             @foreach($lombas as $l)
@@ -179,14 +179,14 @@
                 </table>
             </div>
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 gap-3 pendaftar-pagination-wrap">
                 <div class="text-muted small">
                     Showing {{ $pendaftarans->firstItem() }} to {{ $pendaftarans->lastItem() }} of
                     {{ $pendaftarans->total() }} entries
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <div class="pagination-input d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3 pendaftar-pagination-controls">
+                    <div class="pagination-input d-flex align-items-center gap-2 pendaftar-page-jump">
                         <span class="small text-muted">Page</span>
                         <input type="number" id="manual-page" class="form-control form-control-sm text-center"
                             value="{{ $pendaftarans->currentPage() }}" min="1" max="{{ $pendaftarans->lastPage() }}"
@@ -194,7 +194,9 @@
                         <span class="small text-muted">of {{ $pendaftarans->lastPage() }}</span>
                         <button class="btn btn-sm btn-outline-secondary" onclick="goToPage()">Go</button>
                     </div>
-                    {{ $pendaftarans->appends(['search' => $search, 'lomba_id' => $lomba_id])->links('pagination::bootstrap-5') }}
+                    <div class="pendaftar-pagination-links">
+                        {{ $pendaftarans->appends(['search' => $search, 'lomba_id' => $lomba_id])->links('pagination::bootstrap-5') }}
+                    </div>
                 </div>
             </div>
 
@@ -315,6 +317,85 @@
     </div>
 
     <style>
+        @media (max-width: 767.98px) {
+            .pendaftar-toolbar {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.75rem;
+            }
+
+            .pendaftar-toolbar-actions {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                width: 100%;
+                gap: 0.5rem !important;
+            }
+
+            .pendaftar-toolbar-actions > form,
+            .pendaftar-toolbar-actions > a,
+            .pendaftar-toolbar-actions > button {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            .pendaftar-toolbar-actions form button,
+            .pendaftar-toolbar-actions > a,
+            .pendaftar-toolbar-actions > button {
+                width: 100%;
+            }
+
+            .pendaftar-filter-form {
+                flex-direction: column;
+            }
+
+            .pendaftar-pagination-wrap {
+                align-items: stretch !important;
+            }
+
+            .pendaftar-pagination-controls {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+            }
+
+            .pendaftar-page-jump {
+                justify-content: space-between;
+                width: 100%;
+                padding: 0.5rem 0.75rem;
+                border: 1px solid var(--bs-border-color);
+                border-radius: 0.75rem;
+                background: var(--bs-body-bg);
+            }
+
+            .pendaftar-page-jump #manual-page {
+                width: 72px !important;
+            }
+
+            .pendaftar-pagination-links .pagination {
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-bottom: 0;
+                gap: 0.25rem;
+            }
+
+            .pendaftar-pagination-links .page-link {
+                font-size: 0.85rem;
+                padding: 0.35rem 0.6rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pendaftar-toolbar-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .pendaftar-page-jump {
+                gap: 0.4rem !important;
+                flex-wrap: wrap;
+            }
+        }
+
         @media print {
 
             .btn,

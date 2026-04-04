@@ -119,16 +119,18 @@ class PageController extends Controller
 
         $data['status'] = 'pending';
 
-        // Cek apakah email atau no_wa sudah pernah terdaftar di lomba yang sama
+        // Cegah daftar ganda berdasarkan identitas peserta (bukan kontak pembina).
+        // Kontak email/WA bisa dipakai bersama untuk beberapa peserta dalam lomba yang sama.
+        $normalizedNama = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $request->nama)));
+        $normalizedSekolah = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $request->sekolah)));
+
         $sudahDaftar = Pendaftaran::where('lomba_id', $request->lomba_id)
-            ->where(function ($query) use ($request) {
-                $query->where('email', $request->email)
-                    ->orWhere('no_wa', $request->no_wa);
-            })
+            ->whereRaw('LOWER(TRIM(nama)) = ?', [$normalizedNama])
+            ->whereRaw('LOWER(TRIM(sekolah)) = ?', [$normalizedSekolah])
             ->exists();
 
         if ($sudahDaftar) {
-            return back()->withInput()->with('error', 'Email atau Nomor WhatsApp ini sudah terdaftar pada perlombaan yang sama. Jika Anda merasa belum mendaftar, silakan hubungi kontak panitia.');
+            return back()->withInput()->with('error', 'Peserta dengan nama dan sekolah yang sama sudah terdaftar pada perlombaan ini. Jika ini berbeda peserta, pastikan nama/sekolah dibedakan dengan jelas atau hubungi panitia.');
         }
 
         $lomba = Lomba::find($request->lomba_id);
@@ -143,8 +145,12 @@ class PageController extends Controller
 
         // Tambahkan ke tabel participants agar bisa di-vote (Polling)
         \App\Models\Participant::firstOrCreate(
-            ['nama' => $pendaftaran->nama, 'lomba_id' => $pendaftaran->lomba_id],
-            ['sekolah' => $pendaftaran->sekolah, 'source' => 'web']
+            [
+                'nama' => $pendaftaran->nama,
+                'sekolah' => $pendaftaran->sekolah,
+                'lomba_id' => $pendaftaran->lomba_id,
+            ],
+            ['source' => 'web']
         );
 
         return redirect()->route('pendaftaran')->with([

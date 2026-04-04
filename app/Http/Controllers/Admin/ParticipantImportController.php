@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ParticipantImportController extends Controller
@@ -11,7 +12,7 @@ class ParticipantImportController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'file_csv' => 'required|file|mimes:csv,txt,text/plain,xlsx,xls|max:5120',
+            'file_csv' => 'required|file|mimes:csv,txt|max:5120',
         ]);
 
         $file = $request->file('file_csv');
@@ -71,12 +72,6 @@ class ParticipantImportController extends Controller
 
             $value = strtr($value, [
                 "\xC2\xA0" => ' ',
-                '’' => "'",
-                '‘' => "'",
-                '“' => '"',
-                '”' => '"',
-                '–' => '-',
-                '—' => '-',
             ]);
 
             $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value);
@@ -196,10 +191,134 @@ class ParticipantImportController extends Controller
             return null;
         };
 
+        $normalizeIdentityText = function ($value) use ($normalizeText) {
+            $normalized = (string) $normalizeText($value);
+            return preg_replace('/\s+/u', ' ', trim($normalized));
+        };
+
+        $normalizeIdentityForCompare = function ($value) use ($normalizeIdentityText) {
+            return mb_strtolower($normalizeIdentityText($value));
+        };
+
+        $buildIdentityKey = function ($nama, $sekolah, $lombaId) use ($normalizeIdentityForCompare) {
+            return $normalizeIdentityForCompare($nama) . '|' . $normalizeIdentityForCompare($sekolah) . '|' . $lombaId;
+        };
+
+        // Auto-detect slash date style from incoming rows (d/m or m/d).
+        $slashDateMode = null;
+
+        $parseImportedTimestamp = function ($value) use ($normalizeText, &$slashDateMode) {
+            if ($value === null || trim((string) $value) === '') {
+                return now();
+            }
+
+            $raw = $normalizeText($value);
+
+            // Support Excel serial date numbers from spreadsheet exports.
+            if (is_numeric($raw)) {
+                $serial = (float) $raw;
+                if ($serial > 1000 && $serial < 100000) {
+                    $days = (int) floor($serial);
+                    $seconds = (int) round(($serial - $days) * 86400);
+                    $dt = \Carbon\Carbon::create(1899, 12, 30, 0, 0, 0)->addDays($days)->addSeconds($seconds);
+                    return $dt;
+                }
+            }
+
+            $raw = str_replace('.', '/', trim((string) $raw));
+
+            // Handle slash-based dates with adaptive d/m vs m/d detection.
+            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/', $raw, $m)) {
+                $a = (int) $m[1];
+                $b = (int) $m[2];
+                $y = (int) $m[3];
+                $h = isset($m[4]) ? (int) $m[4] : 0;
+                $i = isset($m[5]) ? (int) $m[5] : 0;
+                $s = isset($m[6]) ? (int) $m[6] : 0;
+
+                if ($y < 100) {
+                    $y += 2000;
+                }
+
+                if ($a > 12 && $b <= 12) {
+                    $slashDateMode = 'dmy';
+                } elseif ($b > 12 && $a <= 12) {
+                    $slashDateMode = 'mdy';
+                }
+
+                $mode = $slashDateMode ?? 'dmy';
+                $day = $mode === 'mdy' ? $b : $a;
+                $month = $mode === 'mdy' ? $a : $b;
+
+                if (checkdate($month, $day, $y)) {
+                    $dt = \Carbon\Carbon::create($y, $month, $day, $h, $i, $s);
+                    return $dt;
+                }
+            }
+
+            $formats = [
+                'd/m/Y H:i:s',
+                'd/m/Y H:i',
+                'd/m/Y',
+                'd-m-Y H:i:s',
+                'd-m-Y H:i',
+                'd-m-Y',
+                'd/m/y H:i:s',
+                'd/m/y H:i',
+                'd/m/y',
+                'd-m-y H:i:s',
+                'd-m-y H:i',
+                'd-m-y',
+                'Y-m-d H:i:s',
+                'Y-m-d H:i',
+                'Y-m-d',
+                'Y/m/d H:i:s',
+                'Y/m/d H:i',
+                'Y/m/d',
+                'm/d/Y H:i:s',
+                'm/d/Y H:i',
+                'm/d/Y',
+                'm-d-Y H:i:s',
+                'm-d-Y H:i',
+                'm-d-Y',
+                'd M Y H:i:s',
+                'd M Y H:i',
+                'd M Y',
+                'd F Y H:i:s',
+                'd F Y H:i',
+                'd F Y',
+                'M d Y H:i:s',
+                'M d Y H:i',
+                'M d Y',
+                'F d Y H:i:s',
+                'F d Y H:i',
+                'F d Y',
+            ];
+
+            foreach ($formats as $format) {
+                try {
+                    $dt = \Carbon\Carbon::createFromFormat($format, $raw);
+                    if ($dt !== false) {
+                        return $dt;
+                    }
+                } catch (\Throwable $e) {
+                    // Continue trying next formats.
+                }
+            }
+
+            try {
+                $dt = \Carbon\Carbon::parse($raw);
+                return $dt;
+            } catch (\Throwable $e) {
+                return now();
+            }
+        };
+
         $successCount = 0;
         $skipCount = 0;
         $errors = [];
         $errorDetails = [];
+        $seenInCurrentFile = [];
         $batchId = 'batch_' . time();
         $rowNum = 1;
 
@@ -220,7 +339,7 @@ class ParticipantImportController extends Controller
                     'nama_pembina' => null,
                     'no_hp_pembina' => null,
                     'tanggal' => null,
-                    'status' => 'confirmed',
+                    'status' => 'pending',
                     'metode_pembayaran' => 'tunai',
                 ];
 
@@ -303,59 +422,78 @@ class ParticipantImportController extends Controller
                     continue;
                 }
 
-                $existing = \App\Models\Pendaftaran::where('nama', $pendaftarData['nama'])
-                    ->where('sekolah', $pendaftarData['sekolah'])
-                    ->where('lomba_id', $foundLombaId)
-                    ->first();
+                $pendaftarData['nama'] = $normalizeIdentityText($pendaftarData['nama']);
+                $pendaftarData['sekolah'] = $normalizeIdentityText($pendaftarData['sekolah']);
+                $identityKey = $buildIdentityKey($pendaftarData['nama'], $pendaftarData['sekolah'], $foundLombaId);
 
-                if ($existing) {
+                if (isset($seenInCurrentFile[$identityKey])) {
                     $skipCount++;
-                    $errors[] = "Baris $rowNum: Duplikat '$pendaftarData[nama]' dari $pendaftarData[sekolah] ($foundLombaId). Skip.";
+                    $errors[] = "Baris $rowNum: Duplikat dalam file ('{$pendaftarData['nama']}' - {$pendaftarData['sekolah']}). Skip.";
                     $errorDetails[] = [
                         'row' => $rowNum,
-                        'reason' => 'Duplikat',
+                        'reason' => 'Duplikat dalam file',
                         'preview' => $pendaftarData['nama'] . ' | ' . $pendaftarData['sekolah'] . ' | lomba_id=' . $foundLombaId,
                     ];
                     continue;
                 }
 
-                $createdAt = now();
-                if (!empty($pendaftarData['tanggal'])) {
-                    try {
-                        $createdAt = \Carbon\Carbon::parse(str_replace('/', '-', $pendaftarData['tanggal']));
-                    } catch (\Exception $e) {
-                        $createdAt = now();
-                    }
+                $existing = \App\Models\Pendaftaran::where('lomba_id', $foundLombaId)
+                    ->whereRaw('LOWER(TRIM(nama)) = ?', [$normalizeIdentityForCompare($pendaftarData['nama'])])
+                    ->whereRaw('LOWER(TRIM(sekolah)) = ?', [$normalizeIdentityForCompare($pendaftarData['sekolah'])])
+                    ->exists();
+
+                if ($existing) {
+                    $skipCount++;
+                    $errors[] = "Baris $rowNum: Duplikat '{$pendaftarData['nama']}' dari {$pendaftarData['sekolah']} ($foundLombaId). Skip.";
+                    $errorDetails[] = [
+                        'row' => $rowNum,
+                        'reason' => 'Duplikat',
+                        'preview' => $pendaftarData['nama'] . ' | ' . $pendaftarData['sekolah'] . ' | lomba_id=' . $foundLombaId,
+                    ];
+                    $seenInCurrentFile[$identityKey] = true;
+                    continue;
                 }
 
-                \App\Models\Pendaftaran::create([
-                    'nama' => $pendaftarData['nama'],
-                    'email' => $pendaftarData['email'],
-                    'no_wa' => $pendaftarData['no_wa'],
-                    'sekolah' => $pendaftarData['sekolah'],
-                    'lomba_id' => $foundLombaId,
-                    'nama_pembina' => $pendaftarData['nama_pembina'],
-                    'no_hp_pembina' => $pendaftarData['no_hp_pembina'],
-                    'status' => $pendaftarData['status'],
-                    'metode_pembayaran' => $pendaftarData['metode_pembayaran'],
-                    'import_batch' => $batchId,
-                    'created_at' => $createdAt,
-                    'updated_at' => $createdAt,
-                ]);
+                $createdAt = $parseImportedTimestamp($pendaftarData['tanggal']);
+                if ($createdAt->greaterThan(now())) {
+                    $createdAt = now();
+                }
 
-                \App\Models\Participant::updateOrCreate(
-                    ['nama' => $pendaftarData['nama'], 'lomba_id' => $foundLombaId],
-                    [
+                DB::transaction(function () use ($pendaftarData, $foundLombaId, $batchId, $createdAt) {
+                    \App\Models\Pendaftaran::create([
+                        'nama' => $pendaftarData['nama'],
+                        'email' => $pendaftarData['email'],
+                        'no_wa' => $pendaftarData['no_wa'],
                         'sekolah' => $pendaftarData['sekolah'],
-                        'source' => 'import',
+                        'lomba_id' => $foundLombaId,
+                        'nama_pembina' => $pendaftarData['nama_pembina'],
+                        'no_hp_pembina' => $pendaftarData['no_hp_pembina'],
+                        'status' => $pendaftarData['status'],
+                        'metode_pembayaran' => $pendaftarData['metode_pembayaran'],
                         'import_batch' => $batchId,
                         'created_at' => $createdAt,
                         'updated_at' => $createdAt,
-                    ]
-                );
+                    ]);
 
+                    // Do not overwrite existing participant data; only create if missing.
+                    \App\Models\Participant::firstOrCreate(
+                        [
+                            'nama' => $pendaftarData['nama'],
+                            'sekolah' => $pendaftarData['sekolah'],
+                            'lomba_id' => $foundLombaId,
+                        ],
+                        [
+                            'source' => 'import',
+                            'import_batch' => $batchId,
+                            'created_at' => $createdAt,
+                            'updated_at' => $createdAt,
+                        ]
+                    );
+                });
+
+                $seenInCurrentFile[$identityKey] = true;
                 $successCount++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 \Log::error("Import error baris $rowNum: " . $e->getMessage());
                 $skipCount++;
                 $errors[] = "Baris $rowNum: " . $e->getMessage();
@@ -430,7 +568,9 @@ class ParticipantImportController extends Controller
 
         $batchId = $lastBatch->import_batch;
         $countPendaftaran = \App\Models\Pendaftaran::where('import_batch', $batchId)->delete();
-        $countParticipants = \App\Models\Participant::where('import_batch', $batchId)->delete();
+        $countParticipants = \App\Models\Participant::where('import_batch', $batchId)
+            ->where('source', 'import')
+            ->delete();
 
         return back()->with('success', "Rollback berhasil! Menghapus $countPendaftaran data pendaftaran dan $countParticipants data voting dari sesi import terakhir ($batchId).");
     }
