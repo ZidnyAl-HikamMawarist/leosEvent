@@ -362,6 +362,16 @@ class ParticipantImportController extends Controller
                         continue;
                     }
 
+                    // Support header like "Pembina" (without "Nama Pembina")
+                    if (
+                        str_contains($colTitle, 'pembina') &&
+                        !preg_match('/wa|hp|telp|nomor|phone|kontak/', $colTitle)
+                    ) {
+                        if (strlen($val) > 2 && strlen($val) < 150) {
+                            $pendaftarData['nama_pembina'] = $val;
+                        }
+                    }
+
                     if (str_contains($colTitle, 'nama') || str_contains($colTitle, 'peserta')) {
                         if (str_contains($colTitle, 'pembina')) {
                             $pendaftarData['nama_pembina'] = $val;
