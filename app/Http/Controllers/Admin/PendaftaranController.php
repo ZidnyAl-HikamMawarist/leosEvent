@@ -74,7 +74,7 @@ class PendaftaranController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'no_wa' => 'required|string|max:20',
@@ -87,7 +87,7 @@ class PendaftaranController extends Controller
         ]);
 
         $pendaftaran = Pendaftaran::findOrFail($id);
-        $pendaftaran->update($request->all());
+        $pendaftaran->update($validated);
 
         return redirect()->route('admin.pendaftaran.index')->with('success', 'Data pendaftar berhasil diperbarui');
     }

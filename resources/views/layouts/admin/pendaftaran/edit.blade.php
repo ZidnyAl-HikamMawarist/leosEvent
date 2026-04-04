@@ -38,6 +38,13 @@
                             @error('no_wa') <small class="text-danger">{{ $message }}</small> @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sekolah</label>
+                            <input type="text" name="sekolah" class="form-control"
+                                value="{{ old('sekolah', $pendaftaran->sekolah) }}" required>
+                            @error('sekolah') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Nama Pembina</label>
