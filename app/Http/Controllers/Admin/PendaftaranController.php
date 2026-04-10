@@ -40,27 +40,33 @@ class PendaftaranController extends Controller
     public function daftarHadir(Request $request)
     {
         $lomba_id = $request->get('lomba_id');
+        $status = $request->get('status');
 
         $query = Pendaftaran::with('lomba')
             ->when($lomba_id, function($q) use ($lomba_id) {
                 $q->where('lomba_id', $lomba_id);
             })
-            ->orderBy('nama', 'asc');  // Alphabetical by nama
+            ->when($status, function($q) use ($status) {
+                $q->where('status', $status);
+            })
+            ->orderBy('nama', 'asc');
 
         $data = $query->get();
 
-        $lombaTitle = $lomba_id 
-            ? ($data->first()->lomba->nama_lomba ?? 'Unknown Lomba') 
-            : 'SEMUA LOMBA';
+        $lombaModel = $lomba_id ? Lomba::find($lomba_id) : null;
+        $lombaTitle = $lombaModel ? $lombaModel->nama_lomba : 'SEMUA LOMBA';
+        
+        if ($status) {
+            $lombaTitle .= ' (' . strtoupper($status) . ')';
+        }
 
         $jumlah_baris = max((int) $request->get('jumlah_baris', 30), $data->count());
         $pdf = Pdf::loadView('layouts.admin.pendaftaran.daftar_hadir_pdf', compact('data', 'lombaTitle', 'jumlah_baris'))
             ->setPaper('a4', 'portrait')
             ->setOptions(['isHtml5ParserEnabled' => true, 'isPhpEnabled' => true]);
 
-        $filename = $lomba_id 
-            ? "daftar_hadir_" . strtolower(str_replace(' ', '_', $lombaTitle)) . "_" . date('Y-m-d') . ".pdf"
-            : "daftar_hadir_semua_" . date('Y-m-d') . ".pdf";
+        $cleanTitle = strtolower(str_replace([' ', '(', ')'], ['_', '', ''], $lombaTitle));
+        $filename = "daftar_hadir_{$cleanTitle}_" . date('Y-m-d') . ".pdf";
 
         return $pdf->download($filename);
     }
@@ -87,14 +93,41 @@ class PendaftaranController extends Controller
         ]);
 
         $pendaftaran = Pendaftaran::findOrFail($id);
+        
+        // Simpan data lama untuk pencocokan di tabel participants
+        $oldNama = $pendaftaran->nama;
+        $oldSekolah = $pendaftaran->sekolah;
+        $oldLombaId = $pendaftaran->lomba_id;
+
+        // Normalisasi data baru sebelum disimpan (menghindari spasi ganda/berlebih)
+        $validated['nama'] = preg_replace('/\s+/u', ' ', trim((string) $validated['nama']));
+        $validated['sekolah'] = preg_replace('/\s+/u', ' ', trim((string) $validated['sekolah']));
+
         $pendaftaran->update($validated);
 
-        return redirect()->route('admin.pendaftaran.index')->with('success', 'Data pendaftar berhasil diperbarui');
+        // Sinkronisasi: Update data di tabel participants agar tetap nyambung dengan voting
+        \App\Models\Participant::where('nama', $oldNama)
+            ->where('sekolah', $oldSekolah)
+            ->where('lomba_id', $oldLombaId)
+            ->update([
+                'nama' => $validated['nama'],
+                'sekolah' => $validated['sekolah'],
+                'lomba_id' => $validated['lomba_id'],
+            ]);
+
+        return redirect()->route('admin.pendaftaran.index')->with('success', 'Data pendaftar berhasil diperbarui dan disinkronkan dengan voting');
     }
 
     public function destroy($id)
     {
         $pendaftaran = Pendaftaran::findOrFail($id);
+
+        // Hapus juga data participant voting yang terkait
+        \App\Models\Participant::where('nama', $pendaftaran->nama)
+            ->where('sekolah', $pendaftaran->sekolah)
+            ->where('lomba_id', $pendaftaran->lomba_id)
+            ->delete();
+
         $pendaftaran->delete();
 
         return back()->with('success', 'Data pendaftar berhasil dihapus');
@@ -157,11 +190,11 @@ class PendaftaranController extends Controller
     public function deleteAll()
     {
         $count = Pendaftaran::count();
-        Pendaftaran::truncate();
-        // Also clean up participants that were imported
-        \App\Models\Participant::where('source', 'import')->delete();
+        // Menggunakan delete() alih-alih truncate() agar tidak error terhadap foreign key constraints (tabel votes)
+        Pendaftaran::query()->delete();
+        \App\Models\Participant::query()->delete();
 
-        return back()->with('success', "Berhasil menghapus semua $count data pendaftar.");
+        return back()->with('success', "Berhasil menghapus semua $count data pendaftar dan data voting.");
     }
 
     public function bulkDelete(Request $request)
@@ -171,9 +204,17 @@ class PendaftaranController extends Controller
             'ids.*' => 'exists:pendaftarans,id',
         ]);
 
+        $pendaftarans = Pendaftaran::whereIn('id', $request->ids)->get();
+        
+        foreach ($pendaftarans as $p) {
+            \App\Models\Participant::where('nama', $p->nama)
+                ->where('sekolah', $p->sekolah)
+                ->where('lomba_id', $p->lomba_id)
+                ->delete();
+        }
+
         $count = Pendaftaran::whereIn('id', $request->ids)->delete();
 
         return back()->with('success', "Berhasil menghapus $count data pendaftar terpilih.");
     }
 }
-

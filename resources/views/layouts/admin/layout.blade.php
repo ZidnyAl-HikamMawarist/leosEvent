@@ -618,7 +618,7 @@
         </div>
 
         <div class="sidebar-footer">
-            <form action="{{ route('logout') }}" method="POST">
+            <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin keluar?')">
                 @csrf
                 <button class="btn-logout">
                     <i class="bi bi-box-arrow-right"></i>

@@ -6,9 +6,25 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <p class="text-muted mb-0">Selamat datang kembali, <strong>{{ auth()->user()->name }}</strong></p>
+                <div class="mt-2 text-primary small fw-bold">
+                    <i class="bi bi-calendar3 me-1"></i> Menampilkan Statistik Tahun: {{ $currentYear }}
+                </div>
             </div>
-            <div class="text-end">
-                <small class="text-muted">Last updated: {{ now()->format('d M Y, H:i') }}</small>
+            <div class="d-flex align-items-center gap-3">
+                <form action="{{ route('admin.dashboard') }}" method="GET" class="d-flex align-items-center gap-2">
+                    <label class="small text-muted fw-bold text-nowrap mb-0 d-none d-md-inline">Pilih Tahun Event:</label>
+                    <select name="year" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()" style="width: 100px;">
+                        @foreach($availableYears as $year)
+                            <option value="{{ $year }}" {{ $currentYear == $year ? 'selected' : '' }}>{{ $year }}</option>
+                        @endforeach
+                        @if(!$availableYears->contains(date('Y')))
+                            <option value="{{ date('Y') }}" {{ $currentYear == date('Y') ? 'selected' : '' }}>{{ date('Y') }} (Now)</option>
+                        @endif
+                    </select>
+                </form>
+                <div class="text-end d-none d-sm-block">
+                    <small class="text-muted">Last updated: {{ now()->format('d M Y, H:i') }}</small>
+                </div>
             </div>
         </div>
     </div>

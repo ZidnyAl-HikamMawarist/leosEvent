@@ -200,7 +200,7 @@
                 </div>
             </div>
 
-                <script>
+            <script>
                 function goToPage() {
                     const page = document.getElementById('manual-page').value;
                     const url = new URL(window.location.href);
@@ -210,20 +210,25 @@
 
                 function generateDaftarHadir() {
                     const lombaId = document.getElementById('daftarHadirLomba').value;
+                    const status = document.getElementById('daftarHadirStatus').value;
                     const jumlahBaris = document.getElementById('daftarHadirJumlah').value;
                     let url = '{{ route("admin.pendaftaran.daftarHadir") }}';
-                    if (lombaId) url += '?lomba_id=' + lombaId;
-                    if (jumlahBaris) url += (lombaId ? '&' : '?') + 'jumlah_baris=' + jumlahBaris;
+                    let params = [];
+                    if (lombaId) params.push('lomba_id=' + lombaId);
+                    if (status) params.push('status=' + status);
+                    if (jumlahBaris) params.push('jumlah_baris=' + jumlahBaris);
+                    
+                    if (params.length > 0) {
+                        url += '?' + params.join('&');
+                    }
+                    
                     window.open(url, '_blank');
                     $('#daftarHadirModal').modal('hide');
                 }
             </script>
         </div>
     </div>
-    </div>
-    </div>
-
-   
+    
 {{-- Daftar Hadir Filter Modal --}}
 <div class="modal fade" id="daftarHadirModal" tabindex="-1">
     <div class="modal-dialog">
@@ -244,6 +249,17 @@
                                     {{ $l->nama_lomba }}
                                 </option>
                             @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Bagian Pilih Status -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Pilih Status</label>
+                        <select name="status" class="form-select" id="daftarHadirStatus">
+                            <option value="">Semua Status</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
                         </select>
                     </div>
 

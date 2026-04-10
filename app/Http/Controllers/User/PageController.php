@@ -35,7 +35,15 @@ class PageController extends Controller
             'selectedYear' => $selectedYear,
             'availableYears' => Lomba::distinct()->pluck('event_year')->sortDesc(),
             'supportMessages' => \App\Models\SupportMessage::where('status', 'approved')->latest()->take(10)->get(),
-            'topParticipants' => \App\Models\Participant::orderBy('vote_count', 'desc')->take(3)->get(),
+            'topParticipants' => \App\Models\Participant::whereExists(function ($query) use ($selectedYear) {
+                $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('pendaftarans')
+                    ->join('lombas', 'lombas.id', '=', 'pendaftarans.lomba_id')
+                    ->where('lombas.event_year', $selectedYear)
+                    ->whereColumn('pendaftarans.nama', 'participants.nama')
+                    ->whereColumn('pendaftarans.sekolah', 'participants.sekolah')
+                    ->whereColumn('pendaftarans.lomba_id', 'participants.lomba_id');
+            })->orderBy('vote_count', 'desc')->take(3)->get(),
             'setting' => \App\Models\Setting::first(),
         ]);
     }
@@ -132,6 +140,10 @@ class PageController extends Controller
         if ($sudahDaftar) {
             return back()->withInput()->with('error', 'Peserta dengan nama dan sekolah yang sama sudah terdaftar pada perlombaan ini. Jika ini berbeda peserta, pastikan nama/sekolah dibedakan dengan jelas atau hubungi panitia.');
         }
+
+        // Terapkan normalisasi ke data yang akan disimpan agar database bersih (tanpa spasi ganda/berlebih)
+        $data['nama'] = preg_replace('/\s+/u', ' ', trim((string) $request->nama));
+        $data['sekolah'] = preg_replace('/\s+/u', ' ', trim((string) $request->sekolah));
 
         $lomba = Lomba::find($request->lomba_id);
 

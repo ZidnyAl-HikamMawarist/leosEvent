@@ -11,6 +11,9 @@ class ParticipantImportController extends Controller
 {
     public function store(Request $request)
     {
+        // Berikan waktu eksekusi tak terbatas untuk mengantisipasi file CSV yang sangat besar
+        set_time_limit(0);
+
         $request->validate([
             'file_csv' => 'required|file|mimes:csv,txt|max:5120',
         ]);
@@ -178,14 +181,6 @@ class ParticipantImportController extends Controller
             // Priority 2: manual fallback from UI
             if (!empty($manualLombaId)) {
                 return $manualLombaId;
-            }
-
-            // Priority 3: strict full-name row scan only
-            foreach ($data as $cellValue) {
-                $id = $getLombaId($cellValue, 92);
-                if ($id) {
-                    return $id;
-                }
             }
 
             return null;

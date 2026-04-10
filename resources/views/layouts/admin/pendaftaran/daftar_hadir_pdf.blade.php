@@ -88,11 +88,12 @@
             background-color: #d3d3d3;
             font-size: 10pt;
         }
-        .col-no { width: 30px; text-align: center; }
-        .col-nama { width: 25%; }
-        .col-asal { width: 25%; }
-        .col-telp { width: 20%; }
-        .col-ttd { width: 25%; }
+        .col-no { width: 6%; text-align: center; }
+        .col-nama { width: 24%; }
+        .col-asal { width: 18%; }
+        .col-telp { width: 14%; }
+        .col-lomba { width: 20%; }
+        .col-ttd { width: 18%; }
 
         /* Tanda Tangan Zig-zag dengan Nomor */
         .ttd-cell {
@@ -134,7 +135,7 @@
         <!-- JUDUL -->
         <div class="title-section">
             <strong>DAFTAR HADIR PESERTA TECHNICAL MEETING</strong><br>
-            <strong>MATA LOMBA TARI TUNGGAL</strong>
+            <strong>MATA LOMBA {{ strtoupper($lombaTitle) }}</strong>
         </div>
 
         <!-- INFO -->
@@ -153,7 +154,8 @@
                     <th class="col-no">No.</th>
                     <th class="col-nama">Nama Peserta</th>
                     <th class="col-asal">Asal Sekolah</th>
-                    <th class="col-telp">No. Telp</th>
+                    <th class="col-telp" style="text-align: center;">Status</th>
+                    <th class="col-lomba">Mata Lomba</th>
                     <th class="col-ttd">Tanda Tangan</th>
                 </tr>
             </thead>
@@ -167,7 +169,8 @@
                         <td style="text-align: center;">{{ $i }}</td>
                         <td>{{ $p->nama }}</td>
                         <td>{{ $p->sekolah }}</td>
-                        <td>{{ $p->lomba->nama_lomba }}</td>
+                        <td style="font-size: 9pt; text-align: center;">{{ strtoupper($p->status) }}</td>
+                        <td style="font-size: 9pt;">{{ $p->lomba->nama_lomba }}</td>
                         <td class="ttd-cell {{ $isOdd ? 'left-num' : 'right-num' }}">
                             <span class="ttd-num">{{ $i }}</span>
                         </td>
@@ -178,6 +181,7 @@
                     @php $isOdd = ($data->count() + $i) % 2 == 1; @endphp
                     <tr>
                         <td style="text-align: center;">{{ $data->count() + $i }}</td>
+                        <td>-</td>
                         <td>-</td>
                         <td>-</td>
                         <td>-</td>
