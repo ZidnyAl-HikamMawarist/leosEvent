@@ -127,17 +127,45 @@ class PageController extends Controller
 
         $data['status'] = 'pending';
 
-        // Cegah daftar ganda berdasarkan identitas peserta (bukan kontak pembina).
+        // Cegah daftar ganda berdasarkan identitas peserta melalui Pencocokan Alfanumerik Cerdas.
         // Kontak email/WA bisa dipakai bersama untuk beberapa peserta dalam lomba yang sama.
-        $normalizedNama = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $request->nama)));
-        $normalizedSekolah = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $request->sekolah)));
+        $isDuplicate = false;
+        
+        $newNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $request->nama));
+        $newSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $request->sekolah));
+        $newStrAlpha = $newNamaAlpha . $newSekolahAlpha;
+        
+        $reqEmail = trim(mb_strtolower((string) $request->email));
+        $reqWa = preg_replace('/[^0-9]/', '', (string) $request->no_wa);
 
-        $sudahDaftar = Pendaftaran::where('lomba_id', $request->lomba_id)
-            ->whereRaw('LOWER(TRIM(nama)) = ?', [$normalizedNama])
-            ->whereRaw('LOWER(TRIM(sekolah)) = ?', [$normalizedSekolah])
-            ->exists();
+        $existingPendaftarans = \App\Models\Pendaftaran::where('lomba_id', $request->lomba_id)->get(['nama', 'sekolah', 'email', 'no_wa']);
 
-        if ($sudahDaftar) {
+        foreach ($existingPendaftarans as $existing) {
+            if (empty($existing->nama)) continue;
+            
+            $existingNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $existing->nama));
+            $existingSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $existing->sekolah));
+            $existingStrAlpha = $existingNamaAlpha . $existingSekolahAlpha;
+            
+            // Aturan 1: Jika Nama + Sekolah (Alfanumerik) Sama Persis = Duplikat
+            if ($newStrAlpha !== '' && $newStrAlpha === $existingStrAlpha) {
+                $isDuplicate = true;
+                break;
+            }
+            
+            // Aturan 2: Jika Nama Sama Persis, dan (Email ATAU No WA Sama) walau penulisan sekolah beda = Duplikat
+            if ($newNamaAlpha !== '' && $newNamaAlpha === $existingNamaAlpha) {
+                $existingEmail = trim(mb_strtolower((string) $existing->email));
+                $existingWa = preg_replace('/[^0-9]/', '', (string) $existing->no_wa);
+                
+                if (($reqEmail !== '' && $reqEmail === $existingEmail) || ($reqWa !== '' && $reqWa === $existingWa)) {
+                    $isDuplicate = true;
+                    break;
+                }
+            }
+        }
+
+        if ($isDuplicate) {
             return back()->withInput()->with('error', 'Peserta dengan nama dan sekolah yang sama sudah terdaftar pada perlombaan ini. Jika ini berbeda peserta, pastikan nama/sekolah dibedakan dengan jelas atau hubungi panitia.');
         }
 

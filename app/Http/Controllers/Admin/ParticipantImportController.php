@@ -195,8 +195,10 @@ class ParticipantImportController extends Controller
             return mb_strtolower($normalizeIdentityText($value));
         };
 
-        $buildIdentityKey = function ($nama, $sekolah, $lombaId) use ($normalizeIdentityForCompare) {
-            return $normalizeIdentityForCompare($nama) . '|' . $normalizeIdentityForCompare($sekolah) . '|' . $lombaId;
+        $buildIdentityKey = function ($nama, $sekolah, $lombaId) {
+            $namaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $nama));
+            $sekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $sekolah));
+            return $namaAlpha . '|' . $sekolahAlpha . '|' . $lombaId;
         };
 
         // Auto-detect slash date style from incoming rows (d/m or m/d).
@@ -316,6 +318,8 @@ class ParticipantImportController extends Controller
         $seenInCurrentFile = [];
         $batchId = 'batch_' . time();
         $rowNum = 1;
+        
+        $lombaPendaftaransCache = [];
 
         // --- 3. ROW SCANNING ---
         while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
@@ -442,10 +446,40 @@ class ParticipantImportController extends Controller
                     continue;
                 }
 
-                $existing = \App\Models\Pendaftaran::where('lomba_id', $foundLombaId)
-                    ->whereRaw('LOWER(TRIM(nama)) = ?', [$normalizeIdentityForCompare($pendaftarData['nama'])])
-                    ->whereRaw('LOWER(TRIM(sekolah)) = ?', [$normalizeIdentityForCompare($pendaftarData['sekolah'])])
-                    ->exists();
+                if (!isset($lombaPendaftaransCache[$foundLombaId])) {
+                    $lombaPendaftaransCache[$foundLombaId] = \App\Models\Pendaftaran::where('lomba_id', $foundLombaId)->get(['nama', 'sekolah', 'email', 'no_wa']);
+                }
+
+                $existing = false;
+                $newNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $pendaftarData['nama']));
+                $newSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $pendaftarData['sekolah']));
+                $newStrAlpha = $newNamaAlpha . $newSekolahAlpha;
+                
+                $reqEmail = trim(mb_strtolower((string) $pendaftarData['email']));
+                $reqWa = preg_replace('/[^0-9]/', '', (string) $pendaftarData['no_wa']);
+
+                foreach ($lombaPendaftaransCache[$foundLombaId] as $dbRecord) {
+                    if (empty($dbRecord->nama)) continue;
+                    
+                    $existingNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $dbRecord->nama));
+                    $existingSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $dbRecord->sekolah));
+                    $existingStrAlpha = $existingNamaAlpha . $existingSekolahAlpha;
+                    
+                    if ($newStrAlpha !== '' && $newStrAlpha === $existingStrAlpha) {
+                        $existing = true;
+                        break;
+                    }
+                    
+                    if ($newNamaAlpha !== '' && $newNamaAlpha === $existingNamaAlpha) {
+                        $existingEmail = trim(mb_strtolower((string) $dbRecord->email));
+                        $existingWa = preg_replace('/[^0-9]/', '', (string) $dbRecord->no_wa);
+                        
+                        if (($reqEmail !== '' && $reqEmail === $existingEmail) || ($reqWa !== '' && $reqWa === $existingWa)) {
+                            $existing = true;
+                            break;
+                        }
+                    }
+                }
 
                 if ($existing) {
                     $skipCount++;
