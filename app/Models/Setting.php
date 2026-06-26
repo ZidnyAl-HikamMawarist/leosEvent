@@ -10,6 +10,7 @@ class Setting extends Model
     use HasFactory;
 
     protected $fillable = [
+        'is_maintenance',
         'link_pendaftaran',
         'kontak',
         'status_pendaftaran',

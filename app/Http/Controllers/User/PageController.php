@@ -4,6 +4,9 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use App\Services\DuplicateCheckerService;
+use App\Http\Requests\StorePendaftaranRequest;
 use App\Models\Lomba;
 use App\Models\Carousel;
 use App\Models\Timeline;
@@ -14,16 +17,23 @@ use App\Models\Pendaftaran;
 
 class PageController extends Controller
 {
+    /**
+     * Helper untuk mengambil setting dari cache.
+     */
+    private function getSetting(): ?Setting
+    {
+        return Cache::remember('app_setting', 3600, function () {
+            return Setting::first();
+        });
+    }
+
     public function home(Request $request)
     {
-        // Mengambil tahun dari request, default ke tahun sekarang jika tidak ada
         $selectedYear = $request->get('year', date('Y'));
-
-        $galeriLimit = \App\Models\Setting::first()->galeri_limit ?? 6;
+        $setting = $this->getSetting();
+        $galeriLimit = $setting->galeri_limit ?? 6;
         $activeLombaCount = Lomba::where('status', 'aktif')->count();
 
-        // Opsional: Jika ingin otomatis menampilkan tahun terbaru yang ada di database
-        // $selectedYear = $request->get('year', Lomba::max('event_year') ?? date('Y'));
         return view('layouts.user.home', [
             'carousels' => Carousel::where('status', 'aktif')->latest()->take($activeLombaCount)->get(),
             'timelines' => Timeline::where('status', 'aktif')->orderBy('tanggal')->get(),
@@ -44,7 +54,7 @@ class PageController extends Controller
                     ->whereColumn('pendaftarans.sekolah', 'participants.sekolah')
                     ->whereColumn('pendaftarans.lomba_id', 'participants.lomba_id');
             })->orderBy('vote_count', 'desc')->take(3)->get(),
-            'setting' => \App\Models\Setting::first(),
+            'setting' => $setting,
         ]);
     }
 
@@ -69,14 +79,15 @@ class PageController extends Controller
 
     public function galeri()
     {
-        $galeriLimit = \App\Models\Setting::first()->galeri_limit ?? 6;
+        $setting = $this->getSetting();
+        $galeriLimit = $setting->galeri_limit ?? 6;
         $galeris = Galeri::where('status', 'aktif')->latest()->take($galeriLimit)->get();
         return view('layouts.user.galeri', compact('galeris'));
     }
 
     public function pendaftaran()
     {
-        $setting = Setting::first();
+        $setting = $this->getSetting();
         $isRegistrationClosed = false;
         
         if ($setting && $setting->tanggal_tm) {
@@ -94,85 +105,32 @@ class PageController extends Controller
         return view('layouts.user.pendaftaran', compact('lombas', 'selectedLomba', 'isRegistrationClosed', 'setting'));
     }
 
-    public function storePendaftaran(Request $request)
+    public function storePendaftaran(StorePendaftaranRequest $request)
     {
-        $setting = Setting::first();
+        $setting = $this->getSetting();
         if ($setting && $setting->tanggal_tm) {
             if (\Carbon\Carbon::now()->greaterThan(\Carbon\Carbon::parse($setting->tanggal_tm))) {
                 return back()->with('error', 'Technical Meeting sudah dilaksanakan, pendaftaran sudah ditutup! Silakan hubungi panitia jika ada kendala.');
             }
         }
 
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'no_wa' => 'required|string|max:20',
-            'sekolah' => 'required|string|max:255',
-            'lomba_id' => 'required|exists:lombas,id',
-            'nama_pembina' => 'nullable|string|max:255',
-            'no_hp_pembina' => 'nullable|string|max:20',
-            'metode_pembayaran' => 'required|in:transfer,tunai',
-        ]);
-
-        $data = $request->only([
-            'nama',
-            'email',
-            'no_wa',
-            'sekolah',
-            'lomba_id',
-            'nama_pembina',
-            'no_hp_pembina',
-            'metode_pembayaran'
-        ]);
-
+        $data = $request->validated();
         $data['status'] = 'pending';
 
-        // Cegah daftar ganda berdasarkan identitas peserta melalui Pencocokan Alfanumerik Cerdas.
-        // Kontak email/WA bisa dipakai bersama untuk beberapa peserta dalam lomba yang sama.
-        $isDuplicate = false;
-        
-        $newNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $request->nama));
-        $newSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $request->sekolah));
-        $newStrAlpha = $newNamaAlpha . $newSekolahAlpha;
-        
-        $reqEmail = trim(mb_strtolower((string) $request->email));
-        $reqWa = preg_replace('/[^0-9]/', '', (string) $request->no_wa);
-
-        $existingPendaftarans = \App\Models\Pendaftaran::where('lomba_id', $request->lomba_id)->get(['nama', 'sekolah', 'email', 'no_wa']);
-
-        foreach ($existingPendaftarans as $existing) {
-            if (empty($existing->nama)) continue;
-            
-            $existingNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $existing->nama));
-            $existingSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $existing->sekolah));
-            $existingStrAlpha = $existingNamaAlpha . $existingSekolahAlpha;
-            
-            // Aturan 1: Jika Nama + Sekolah (Alfanumerik) Sama Persis = Duplikat
-            if ($newStrAlpha !== '' && $newStrAlpha === $existingStrAlpha) {
-                $isDuplicate = true;
-                break;
-            }
-            
-            // Aturan 2: Jika Nama Sama Persis, dan (Email ATAU No WA Sama) walau penulisan sekolah beda = Duplikat
-            if ($newNamaAlpha !== '' && $newNamaAlpha === $existingNamaAlpha) {
-                $existingEmail = trim(mb_strtolower((string) $existing->email));
-                $existingWa = preg_replace('/[^0-9]/', '', (string) $existing->no_wa);
-                
-                if (($reqEmail !== '' && $reqEmail === $existingEmail) || ($reqWa !== '' && $reqWa === $existingWa)) {
-                    $isDuplicate = true;
-                    break;
-                }
-            }
-        }
+        // Cegah daftar ganda menggunakan DuplicateCheckerService
+        $isDuplicate = DuplicateCheckerService::isDuplicate(
+            $request->nama,
+            $request->sekolah,
+            $request->email,
+            $request->no_wa,
+            $request->lomba_id
+        );
 
         if ($isDuplicate) {
             return back()->withInput()->with('error', 'Peserta dengan nama dan sekolah yang sama sudah terdaftar pada perlombaan ini. Jika ini berbeda peserta, pastikan nama/sekolah dibedakan dengan jelas atau hubungi panitia.');
         }
 
-        // Terapkan normalisasi ke data yang akan disimpan agar database bersih (tanpa spasi ganda/berlebih)
-        $data['nama'] = preg_replace('/\s+/u', ' ', trim((string) $request->nama));
-        $data['sekolah'] = preg_replace('/\s+/u', ' ', trim((string) $request->sekolah));
-
+        // Data sudah dinormalisasi di StorePendaftaranRequest::prepareForValidation()
         $lomba = Lomba::find($request->lomba_id);
 
         // Map ke kolom pemimpin regu jika tipe lomba kelompok

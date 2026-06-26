@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pendaftaran;
 use App\Models\Lomba;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -105,6 +106,8 @@ class PendaftaranController extends Controller
 
         $pendaftaran->update($validated);
 
+        AuditLog::log('update_pendaftaran', "Mengupdate pendaftar: {$validated['nama']}", $pendaftaran);
+
         // Sinkronisasi: Update data di tabel participants agar tetap nyambung dengan voting
         \App\Models\Participant::where('nama', $oldNama)
             ->where('sekolah', $oldSekolah)
@@ -122,6 +125,7 @@ class PendaftaranController extends Controller
     {
         $pendaftaran = Pendaftaran::findOrFail($id);
 
+        $nama = $pendaftaran->nama;
         // Hapus juga data participant voting yang terkait
         \App\Models\Participant::where('nama', $pendaftaran->nama)
             ->where('sekolah', $pendaftaran->sekolah)
@@ -129,6 +133,8 @@ class PendaftaranController extends Controller
             ->delete();
 
         $pendaftaran->delete();
+
+        AuditLog::log('delete_pendaftaran', "Menghapus pendaftar: {$nama}", $pendaftaran);
 
         return back()->with('success', 'Data pendaftar berhasil dihapus');
     }
@@ -150,41 +156,32 @@ class PendaftaranController extends Controller
             return $pdf->download("pendaftar_" . date('Y-m-d') . ".pdf");
         }
 
-        // CSV/Excel logic
-        $filename = "pendaftar_" . date('Y-m-d') . ".csv";
-        $headers = [
-            "Content-type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
-        ];
+        // Excel logic using SimpleXLSXGen
+        $filename = "pendaftar_" . date('Y-m-d') . ".xlsx";
+        $columns = ['Nama', 'Email', 'No. WhatsApp', 'Sekolah', 'Mata Lomba', 'Tipe', 'Pembina', 'No. HP Pembina', 'Pembayaran', 'Tanggal Daftar'];
+        
+        $rows = [$columns];
+        foreach ($data as $item) {
+            $rows[] = [
+                $item->nama,
+                $item->email,
+                $item->no_wa,
+                $item->sekolah,
+                $item->lomba->nama_lomba ?? '-',
+                ucfirst($item->lomba->tipe_lomba ?? '-'),
+                $item->nama_pembina ?? '-',
+                $item->no_hp_pembina ?? '-',
+                strtoupper($item->metode_pembayaran),
+                $item->created_at->format('d M Y H:i')
+            ];
+        }
 
-        $columns = array('Nama', 'Email', 'No. WhatsApp', 'Sekolah', 'Mata Lomba', 'Tipe', 'Pembina', 'No. HP Pembina', 'Pembayaran', 'Tanggal Daftar');
+        $xlsxOutput = (string) \Shuchkin\SimpleXLSXGen::fromArray($rows);
 
-        $callback = function () use ($data, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-
-            foreach ($data as $item) {
-                fputcsv($file, array(
-                    $item->nama,
-                    $item->email,
-                    $item->no_wa,
-                    $item->sekolah,
-                    $item->lomba->nama_lomba ?? 'N/A',
-                    ucfirst($item->lomba->tipe_lomba ?? '-'),
-                    $item->nama_pembina ?? '-',
-                    $item->no_hp_pembina ?? '-',
-                    strtoupper($item->metode_pembayaran),
-                    $item->created_at->format('d M Y')
-                ));
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return response($xlsxOutput)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
+            ->header('Cache-Control', 'max-age=0');
     }
 
     public function deleteAll()
@@ -193,6 +190,8 @@ class PendaftaranController extends Controller
         // Menggunakan delete() alih-alih truncate() agar tidak error terhadap foreign key constraints (tabel votes)
         Pendaftaran::query()->delete();
         \App\Models\Participant::query()->delete();
+
+        AuditLog::log('delete_all_pendaftaran', "Menghapus semua data pendaftar ($count data) dan voting.");
 
         return back()->with('success', "Berhasil menghapus semua $count data pendaftar dan data voting.");
     }
@@ -214,6 +213,8 @@ class PendaftaranController extends Controller
         }
 
         $count = Pendaftaran::whereIn('id', $request->ids)->delete();
+
+        AuditLog::log('bulk_delete_pendaftaran', "Menghapus $count pendaftar terpilih.", null, ['ids' => $request->ids]);
 
         return back()->with('success', "Berhasil menghapus $count data pendaftar terpilih.");
     }

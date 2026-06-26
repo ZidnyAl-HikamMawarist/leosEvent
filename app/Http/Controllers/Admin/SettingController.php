@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
@@ -57,6 +58,7 @@ class SettingController extends Controller
             $request->merge([
                 'is_save_the_date_active' => $request->has('is_save_the_date_active'),
                 'auto_update_status' => $request->has('auto_update_status'),
+                'is_maintenance' => $request->has('is_maintenance'),
             ]);
         }
 
@@ -92,6 +94,7 @@ class SettingController extends Controller
             'event_status' => 'nullable|string',
             'is_save_the_date_active' => 'nullable|boolean',
             'auto_update_status' => 'nullable|boolean',
+            'is_maintenance' => 'nullable|boolean',
             'background_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'background_color' => 'nullable|string|max:20',
             'about_tag' => 'nullable|string',
@@ -185,6 +188,11 @@ class SettingController extends Controller
             ['id' => 1],
             $data
         );
+
+        // Invalidate cache agar perubahan langsung terlihat
+        \Illuminate\Support\Facades\Cache::forget('app_setting');
+
+        AuditLog::log('update_settings', 'Mengupdate pengaturan website');
 
         return back()->with('success', 'Pengaturan berhasil diperbarui');
     }

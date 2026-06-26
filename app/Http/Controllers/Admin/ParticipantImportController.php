@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Shuchkin\SimpleXLSX;
+use App\Services\DuplicateCheckerService;
+use App\Models\AuditLog;
 
 class ParticipantImportController extends Controller
 {
@@ -15,70 +18,66 @@ class ParticipantImportController extends Controller
         set_time_limit(0);
 
         $request->validate([
-            'file_csv' => 'required|file|mimes:csv,txt|max:5120',
+            'file_csv' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120',
         ]);
 
         $file = $request->file('file_csv');
         $filePath = $file->getRealPath();
+        $extension = $file->getClientOriginalExtension();
 
-        // --- 1. SMART DELIMITER DETECTION ---
-        $delimiters = [",", ";", "\t"];
-        $delimiter = ",";
-        $maxCols = 0;
+        $rows = [];
+        $header = [];
 
-        foreach ($delimiters as $d) {
-            $testHandle = fopen($filePath, 'r');
-            $bom = fread($testHandle, 3);
-            if ($bom !== "\xEF\xBB\xBF") {
-                rewind($testHandle);
+        // --- 1. PARSE FILE (XLSX / CSV) ---
+        if (in_array(strtolower($extension), ['xlsx', 'xls'])) {
+            if ($xlsx = SimpleXLSX::parse($filePath)) {
+                $rawRows = $xlsx->rows();
+                if (!empty($rawRows)) {
+                    $header = array_shift($rawRows);
+                    $rows = $rawRows;
+                }
+            } else {
+                return back()->with('error', 'Gagal membaca file Excel: ' . SimpleXLSX::parseError());
+            }
+        } else {
+            // CSV Parsing with Smart Delimiter
+            $delimiters = [",", ";", "\t"];
+            $delimiter = ",";
+            $maxCols = 0;
+
+            foreach ($delimiters as $d) {
+                $testHandle = fopen($filePath, 'r');
+                $bom = fread($testHandle, 3);
+                if ($bom !== "\xEF\xBB\xBF") rewind($testHandle);
+                $testHeader = fgetcsv($testHandle, 0, $d);
+                fclose($testHandle);
+
+                if ($testHeader && count($testHeader) > $maxCols) {
+                    $maxCols = count($testHeader);
+                    $delimiter = $d;
+                }
             }
 
-            $testHeader = fgetcsv($testHandle, 0, $d);
-            fclose($testHandle);
-
-            if ($testHeader && count($testHeader) > $maxCols) {
-                $maxCols = count($testHeader);
-                $delimiter = $d;
+            $handle = fopen($filePath, 'r');
+            $bom = fread($handle, 3);
+            if ($bom !== "\xEF\xBB\xBF") rewind($handle);
+            
+            $header = fgetcsv($handle, 0, $delimiter);
+            while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+                $rows[] = $data;
             }
+            fclose($handle);
         }
 
-        $handle = fopen($filePath, 'r');
-        $bom = fread($handle, 3);
-        if ($bom !== "\xEF\xBB\xBF") {
-            rewind($handle);
-        }
-
-        $header = fgetcsv($handle, 0, $delimiter);
-        if (!$header) {
-            return back()->with('error', 'File CSV kosong atau tidak valid.');
+        if (empty($header) || empty($rows)) {
+            return back()->with('error', 'File kosong atau tidak valid.');
         }
 
         $allLombas = \App\Models\Lomba::all();
 
-        // --- 2A. TEXT NORMALIZER (encoding + punctuation) ---
+        // --- 2. HELPERS ---
         $normalizeText = function ($value) {
-            if ($value === null) {
-                return null;
-            }
-
-            $value = trim((string) $value);
-            if ($value === '') {
-                return '';
-            }
-
-            if (!mb_check_encoding($value, 'UTF-8')) {
-                $converted = @mb_convert_encoding($value, 'UTF-8', 'UTF-8, ISO-8859-1, Windows-1252');
-                if ($converted !== false) {
-                    $value = $converted;
-                }
-            }
-
-            $value = strtr($value, [
-                "\xC2\xA0" => ' ',
-            ]);
-
-            $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value);
-            return preg_replace('/\s+/u', ' ', $value);
+            return DuplicateCheckerService::normalizeText($value);
         };
 
         $normalizeCompare = function ($value) use ($normalizeText) {
@@ -87,20 +86,15 @@ class ParticipantImportController extends Controller
             return trim(preg_replace('/\s+/', ' ', $value));
         };
 
-        // --- 2B. SAFER LOMBA MATCHER (score-based) ---
         $matchLombaWithScore = function ($text) use ($allLombas, $normalizeCompare) {
             $textRaw = $normalizeCompare($text);
-            if ($textRaw === '' || strlen($textRaw) < 2) {
-                return ['id' => null, 'score' => 0];
-            }
+            if ($textRaw === '' || strlen($textRaw) < 2) return ['id' => null, 'score' => 0];
 
             $bestId = null;
             $bestScore = 0;
             foreach ($allLombas as $l) {
                 $lName = $normalizeCompare($l->nama_lomba);
-                if ($lName === '') {
-                    continue;
-                }
+                if ($lName === '') continue;
 
                 $score = 0;
                 if ($lName === $textRaw) {
@@ -113,26 +107,18 @@ class ParticipantImportController extends Controller
                     if (!empty($keywords)) {
                         $hits = 0;
                         foreach ($keywords as $word) {
-                            if (str_contains($textRaw, $word)) {
-                                $hits++;
-                            }
+                            if (str_contains($textRaw, $word)) $hits++;
                         }
-
                         $ratio = $hits / count($keywords);
-                        if ($ratio >= 1) {
-                            $score = max($score, 90);
-                        } elseif ($ratio >= 0.75) {
-                            $score = max($score, 82);
-                        }
+                        if ($ratio >= 1) $score = max($score, 90);
+                        elseif ($ratio >= 0.75) $score = max($score, 82);
                     }
                 }
-
                 if ($score > $bestScore) {
                     $bestScore = $score;
                     $bestId = $l->id;
                 }
             }
-
             return ['id' => $bestId, 'score' => $bestScore];
         };
 
@@ -141,476 +127,311 @@ class ParticipantImportController extends Controller
             return $match['score'] >= $minScore ? $match['id'] : null;
         };
 
-        // Identify lomba columns from header once
-        $lombaColumnIndexes = [];
-        foreach ($header as $idx => $hTitleRaw) {
-            $hTitle = $normalizeCompare($hTitleRaw);
-            if ($hTitle === '') {
-                continue;
-            }
-
-            if (
-                str_contains($hTitle, 'mata lomba') ||
-                str_contains($hTitle, 'kategori lomba') ||
-                str_contains($hTitle, 'nama lomba') ||
-                $hTitle === 'lomba' ||
-                (str_contains($hTitle, 'lomba') && !str_contains($hTitle, 'link'))
-            ) {
-                $lombaColumnIndexes[] = $idx;
-            }
-        }
-
-        $findLombaIdFromRow = function ($data, $manualLombaId) use ($lombaColumnIndexes, $getLombaId, $normalizeText) {
-            // Priority 1: explicit lomba columns
-            foreach ($lombaColumnIndexes as $idx) {
-                if (!isset($data[$idx])) {
-                    continue;
-                }
-
+        $findLombaIdFromRow = function ($data, $manualLombaId, $lombaIndexes) use ($getLombaId, $normalizeText) {
+            foreach ($lombaIndexes as $idx) {
+                if (!isset($data[$idx])) continue;
                 $cell = $normalizeText($data[$idx]);
-                if ($cell === '') {
-                    continue;
-                }
-
+                if ($cell === '') continue;
                 $id = $getLombaId($cell, 82);
-                if ($id) {
-                    return $id;
-                }
+                if ($id) return $id;
             }
-
-            // Priority 2: manual fallback from UI
-            if (!empty($manualLombaId)) {
-                return $manualLombaId;
-            }
-
-            return null;
+            return !empty($manualLombaId) ? $manualLombaId : null;
         };
 
-        $normalizeIdentityText = function ($value) use ($normalizeText) {
-            $normalized = (string) $normalizeText($value);
-            return preg_replace('/\s+/u', ' ', trim($normalized));
-        };
-
-        $normalizeIdentityForCompare = function ($value) use ($normalizeIdentityText) {
-            return mb_strtolower($normalizeIdentityText($value));
-        };
-
-        $buildIdentityKey = function ($nama, $sekolah, $lombaId) {
-            $namaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $nama));
-            $sekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $sekolah));
-            return $namaAlpha . '|' . $sekolahAlpha . '|' . $lombaId;
-        };
-
-        // Auto-detect slash date style from incoming rows (d/m or m/d).
-        $slashDateMode = null;
-
-        $parseImportedTimestamp = function ($value) use ($normalizeText, &$slashDateMode) {
-            if ($value === null || trim((string) $value) === '') {
-                return now();
-            }
-
+        $parseImportedTimestamp = function ($value) use ($normalizeText) {
+            if ($value === null || trim((string) $value) === '') return now();
             $raw = $normalizeText($value);
-
-            // Support Excel serial date numbers from spreadsheet exports.
-            if (is_numeric($raw)) {
+            if (is_numeric($raw)) { // Excel serial date
                 $serial = (float) $raw;
                 if ($serial > 1000 && $serial < 100000) {
                     $days = (int) floor($serial);
                     $seconds = (int) round(($serial - $days) * 86400);
-                    $dt = \Carbon\Carbon::create(1899, 12, 30, 0, 0, 0)->addDays($days)->addSeconds($seconds);
-                    return $dt;
+                    return \Carbon\Carbon::create(1899, 12, 30, 0, 0, 0)->addDays($days)->addSeconds($seconds);
                 }
             }
-
-            $raw = str_replace('.', '/', trim((string) $raw));
-
-            // Handle slash-based dates with adaptive d/m vs m/d detection.
-            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/', $raw, $m)) {
-                $a = (int) $m[1];
-                $b = (int) $m[2];
-                $y = (int) $m[3];
-                $h = isset($m[4]) ? (int) $m[4] : 0;
-                $i = isset($m[5]) ? (int) $m[5] : 0;
-                $s = isset($m[6]) ? (int) $m[6] : 0;
-
-                if ($y < 100) {
-                    $y += 2000;
-                }
-
-                if ($a > 12 && $b <= 12) {
-                    $slashDateMode = 'dmy';
-                } elseif ($b > 12 && $a <= 12) {
-                    $slashDateMode = 'mdy';
-                }
-
-                $mode = $slashDateMode ?? 'dmy';
-                $day = $mode === 'mdy' ? $b : $a;
-                $month = $mode === 'mdy' ? $a : $b;
-
-                if (checkdate($month, $day, $y)) {
-                    $dt = \Carbon\Carbon::create($y, $month, $day, $h, $i, $s);
-                    return $dt;
-                }
-            }
-
-            $formats = [
-                'd/m/Y H:i:s',
-                'd/m/Y H:i',
-                'd/m/Y',
-                'd-m-Y H:i:s',
-                'd-m-Y H:i',
-                'd-m-Y',
-                'd/m/y H:i:s',
-                'd/m/y H:i',
-                'd/m/y',
-                'd-m-y H:i:s',
-                'd-m-y H:i',
-                'd-m-y',
-                'Y-m-d H:i:s',
-                'Y-m-d H:i',
-                'Y-m-d',
-                'Y/m/d H:i:s',
-                'Y/m/d H:i',
-                'Y/m/d',
-                'm/d/Y H:i:s',
-                'm/d/Y H:i',
-                'm/d/Y',
-                'm-d-Y H:i:s',
-                'm-d-Y H:i',
-                'm-d-Y',
-                'd M Y H:i:s',
-                'd M Y H:i',
-                'd M Y',
-                'd F Y H:i:s',
-                'd F Y H:i',
-                'd F Y',
-                'M d Y H:i:s',
-                'M d Y H:i',
-                'M d Y',
-                'F d Y H:i:s',
-                'F d Y H:i',
-                'F d Y',
-            ];
-
-            foreach ($formats as $format) {
-                try {
-                    $dt = \Carbon\Carbon::createFromFormat($format, $raw);
-                    if ($dt !== false) {
-                        return $dt;
-                    }
-                } catch (\Throwable $e) {
-                    // Continue trying next formats.
-                }
-            }
-
-            try {
-                $dt = \Carbon\Carbon::parse($raw);
-                return $dt;
-            } catch (\Throwable $e) {
-                return now();
-            }
+            try { return \Carbon\Carbon::parse(str_replace('.', '/', $raw)); } 
+            catch (\Throwable $e) { return now(); }
         };
 
-        $successCount = 0;
-        $skipCount = 0;
-        $errors = [];
-        $errorDetails = [];
+        // --- 3. SMART COLUMN CLUSTERING ---
+        $nameIndexes = $sekolahIndexes = $pembinaIndexes = $pembinaHpIndexes = $hpIndexes = $emailIndexes = $lombaIndexes = $tanggalIndexes = $pembayaranIndexes = [];
+        
+        foreach ($header as $idx => $hTitleRaw) {
+            $hTitle = strtolower(trim((string) $normalizeText($hTitleRaw)));
+            if ($hTitle === '') continue;
+            
+            if (str_contains($hTitle, 'lomba')) {
+                $lombaIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'pembayaran') || str_contains($hTitle, 'metode') || str_contains($hTitle, 'bayar')) {
+                $pembayaranIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'timestamp') || str_contains($hTitle, 'tanggal')) {
+                $tanggalIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'sekolah') || str_contains($hTitle, 'asal')) {
+                $sekolahIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'email')) {
+                $emailIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'wa') || str_contains($hTitle, 'hp') || str_contains($hTitle, 'whatsapp') || str_contains($hTitle, 'telepon')) {
+                if (str_contains($hTitle, 'pembina') || str_contains($hTitle, 'pelatih')) $pembinaHpIndexes[] = $idx;
+                else $hpIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'pembina') || str_contains($hTitle, 'pelatih')) {
+                $pembinaIndexes[] = $idx;
+            } elseif (str_contains($hTitle, 'nama') || str_contains($hTitle, 'peserta') || str_contains($hTitle, 'danton') || str_contains($hTitle, 'ketua') || str_contains($hTitle, 'pasukan')) {
+                // Ignore if it has bukti or formulir or anggota or pasukan
+                if (!preg_match('/bukti|formulir|wa|hp|email|sekolah|anggota|pasukan/', $hTitle)) {
+                    $nameIndexes[] = $idx;
+                }
+            }
+        }
+
+        $findClosest = function($targetIdx, $candidates) {
+            if (empty($candidates)) return null;
+            $closest = null;
+            $minDist = PHP_INT_MAX;
+            foreach ($candidates as $c) {
+                $dist = abs($c - $targetIdx);
+                if ($dist < $minDist) {
+                    $minDist = $dist;
+                    $closest = $c;
+                }
+            }
+            return $closest;
+        };
+
+        $getValue = function($data, $index) use ($normalizeText) {
+            return ($index !== null && isset($data[$index])) ? $normalizeText($data[$index]) : null;
+        };
+
+        // --- 4. DATA EXTRACTION LOGIC ---
+        $successCount = 0; $skipCount = 0;
+        $errors = []; $errorDetails = [];
         $seenInCurrentFile = [];
         $batchId = 'batch_' . time();
-        $rowNum = 1;
-        
+        $rowNum = 1; // Header is row 1
         $lombaPendaftaransCache = [];
 
-        // --- 3. ROW SCANNING ---
-        while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+        foreach ($rows as $data) {
             $rowNum++;
-            try {
-                if (empty(array_filter($data, fn($v) => !is_null($v) && trim($v) !== ''))) {
-                    continue;
+            if (empty(array_filter($data, fn($v) => !is_null($v) && trim($v) !== ''))) {
+                continue; // Skip empty rows
+            }
+
+            // Extract Lomba ID for the whole row
+            $foundLombaId = $findLombaIdFromRow($data, $request->lomba_id, $lombaIndexes);
+            
+            // Extract global row info (Timestamp, Pembayaran) if any
+            $globalTanggal = $getValue($data, !empty($tanggalIndexes) ? $tanggalIndexes[0] : null);
+            $globalPembayaran = 'tunai';
+            $globalStatus = 'pending';
+            if (!empty($pembayaranIndexes)) {
+                $pVal = strtolower((string)$getValue($data, $pembayaranIndexes[0]));
+                if (str_contains($pVal, 'transfer')) {
+                    $globalPembayaran = 'transfer';
+                    $globalStatus = 'confirmed';
                 }
+            }
 
-                $foundLombaId = $findLombaIdFromRow($data, $request->lomba_id);
-                $pendaftarData = [
-                    'nama' => null,
-                    'sekolah' => null,
-                    'no_wa' => null,
-                    'email' => null,
-                    'nama_pembina' => null,
-                    'no_hp_pembina' => null,
-                    'tanggal' => null,
-                    'status' => 'pending',
-                    'metode_pembayaran' => 'tunai',
-                ];
+            // A row can contain multiple participants (e.g. Peserta 1, Peserta 2, Danton, etc)
+            foreach ($nameIndexes as $nIdx) {
+                $nama = $getValue($data, $nIdx);
+                if (empty($nama) || filter_var($nama, FILTER_VALIDATE_URL) || $nama == '-' || strlen($nama) < 3) continue;
 
-                if (!$foundLombaId) {
-                    $skipCount++;
-                    $preview = implode(' | ', array_filter(array_slice($data, 0, 5), fn($v) => trim((string) $v) !== ''));
-                    $errors[] = "Baris $rowNum: Kategori Lomba tidak ditemukan. ($preview)";
-                    $errorDetails[] = [
-                        'row' => $rowNum,
-                        'reason' => 'Kategori Lomba tidak ditemukan',
-                        'preview' => $preview,
-                    ];
-                    continue;
-                }
+                $closestSekolahIdx = $findClosest($nIdx, $sekolahIndexes);
+                $closestHpIdx = $findClosest($nIdx, $hpIndexes);
+                $closestEmailIdx = $findClosest($nIdx, $emailIndexes);
+                $closestPembinaIdx = $findClosest($nIdx, $pembinaIndexes);
+                $closestPembinaHpIdx = $findClosest($nIdx, $pembinaHpIndexes ?? []);
 
-                foreach ($header as $idx => $colTitleRaw) {
-                    $colTitle = strtolower(trim((string) $normalizeText($colTitleRaw)));
-                    $val = isset($data[$idx]) ? $normalizeText($data[$idx]) : '';
-                    if (empty($val) || filter_var($val, FILTER_VALIDATE_URL)) {
-                        continue;
-                    }
+                $sekolah = $getValue($data, $closestSekolahIdx);
+                $no_wa = $getValue($data, $closestHpIdx);
+                $email = $getValue($data, $closestEmailIdx);
+                $nama_pembina = $getValue($data, $closestPembinaIdx);
+                $no_hp_pembina = $getValue($data, $closestPembinaHpIdx);
 
-                    // Support header like "Pembina" (without "Nama Pembina")
-                    if (
-                        str_contains($colTitle, 'pembina') &&
-                        !preg_match('/wa|hp|telp|nomor|phone|kontak/', $colTitle)
-                    ) {
-                        if (strlen($val) > 2 && strlen($val) < 150) {
-                            $pendaftarData['nama_pembina'] = $val;
-                        }
-                    }
-
-                    if (str_contains($colTitle, 'nama') || str_contains($colTitle, 'peserta')) {
-                        if (str_contains($colTitle, 'pembina')) {
-                            $pendaftarData['nama_pembina'] = $val;
-                        } elseif (!preg_match('/wa|hp|telp|nomor|phone|bukti|formulir/', $colTitle)) {
-                            if (strlen($val) > 2 && strlen($val) < 100) {
-                                $pendaftarData['nama'] = $val;
-                            }
-                        }
-                    }
-
-                    if (str_contains($colTitle, 'sekolah') || str_contains($colTitle, 'asal')) {
-                        $pendaftarData['sekolah'] = $val;
-                    }
-
-                    if (
-                        str_contains($colTitle, 'wa') ||
-                        str_contains($colTitle, 'hp') ||
-                        str_contains($colTitle, 'whatsapp') ||
-                        str_contains($colTitle, 'kontak') ||
-                        str_contains($colTitle, 'telepon')
-                    ) {
-                        if (str_contains($colTitle, 'pembina')) {
-                            $pendaftarData['no_hp_pembina'] = $val;
-                        } else {
-                            $pendaftarData['no_wa'] = $val;
-                        }
-                    }
-
-                    if (str_contains($colTitle, 'email')) {
-                        $pendaftarData['email'] = $val;
-                    }
-
-                    if (str_contains($colTitle, 'timestamp') || str_contains($colTitle, 'tanggal')) {
-                        $pendaftarData['tanggal'] = $val;
-                    }
-
-                    if (str_contains($colTitle, 'pembayaran') || str_contains($colTitle, 'metode') || str_contains($colTitle, 'bayar')) {
-                        $pVal = strtolower(trim($val));
-                        if (str_contains($pVal, 'transfer')) {
-                            $pendaftarData['metode_pembayaran'] = 'transfer';
-                            $pendaftarData['status'] = 'confirmed';
-                        } elseif (str_contains($pVal, 'tunai')) {
-                            $pendaftarData['metode_pembayaran'] = 'tunai';
-                            $pendaftarData['status'] = 'pending';
-                        }
-                    }
-                }
-
-                if (empty($pendaftarData['nama']) || empty($pendaftarData['sekolah'])) {
-                    $skipCount++;
-                    $preview = implode(' | ', array_filter(array_slice($data, 0, 5), fn($v) => trim((string) $v) !== ''));
-                    $errors[] = "Baris $rowNum: Nama atau Sekolah kosong. ($preview)";
-                    $errorDetails[] = [
-                        'row' => $rowNum,
-                        'reason' => 'Nama atau Sekolah kosong',
-                        'preview' => $preview,
-                    ];
-                    continue;
-                }
-
-                $pendaftarData['nama'] = $normalizeIdentityText($pendaftarData['nama']);
-                $pendaftarData['sekolah'] = $normalizeIdentityText($pendaftarData['sekolah']);
-                $identityKey = $buildIdentityKey($pendaftarData['nama'], $pendaftarData['sekolah'], $foundLombaId);
-
-                if (isset($seenInCurrentFile[$identityKey])) {
-                    $skipCount++;
-                    $errors[] = "Baris $rowNum: Duplikat dalam file ('{$pendaftarData['nama']}' - {$pendaftarData['sekolah']}). Skip.";
-                    $errorDetails[] = [
-                        'row' => $rowNum,
-                        'reason' => 'Duplikat dalam file',
-                        'preview' => $pendaftarData['nama'] . ' | ' . $pendaftarData['sekolah'] . ' | lomba_id=' . $foundLombaId,
-                    ];
-                    continue;
-                }
-
-                if (!isset($lombaPendaftaransCache[$foundLombaId])) {
-                    $lombaPendaftaransCache[$foundLombaId] = \App\Models\Pendaftaran::where('lomba_id', $foundLombaId)->get(['nama', 'sekolah', 'email', 'no_wa']);
-                }
-
-                $existing = false;
-                $newNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $pendaftarData['nama']));
-                $newSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $pendaftarData['sekolah']));
-                $newStrAlpha = $newNamaAlpha . $newSekolahAlpha;
-                
-                $reqEmail = trim(mb_strtolower((string) $pendaftarData['email']));
-                $reqWa = preg_replace('/[^0-9]/', '', (string) $pendaftarData['no_wa']);
-
-                foreach ($lombaPendaftaransCache[$foundLombaId] as $dbRecord) {
-                    if (empty($dbRecord->nama)) continue;
-                    
-                    $existingNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $dbRecord->nama));
-                    $existingSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $dbRecord->sekolah));
-                    $existingStrAlpha = $existingNamaAlpha . $existingSekolahAlpha;
-                    
-                    if ($newStrAlpha !== '' && $newStrAlpha === $existingStrAlpha) {
-                        $existing = true;
-                        break;
-                    }
-                    
-                    if ($newNamaAlpha !== '' && $newNamaAlpha === $existingNamaAlpha) {
-                        $existingEmail = trim(mb_strtolower((string) $dbRecord->email));
-                        $existingWa = preg_replace('/[^0-9]/', '', (string) $dbRecord->no_wa);
-                        
-                        if (($reqEmail !== '' && $reqEmail === $existingEmail) || ($reqWa !== '' && $reqWa === $existingWa)) {
-                            $existing = true;
+                if (empty($sekolah)) {
+                    // Try to fallback to first sekolah found in the row that has a value
+                    foreach ($sekolahIndexes as $sIdx) {
+                        $val = $getValue($data, $sIdx);
+                        if (!empty($val)) {
+                            $sekolah = $val;
                             break;
                         }
                     }
                 }
 
+                // Bulletproof: JANGAN PERNAH SKIP WALAUPUN SEKOLAH KOSONG
+                if (empty($sekolah)) {
+                    $sekolah = '-';
+                }
+
+                if (!$foundLombaId) {
+                    $skipCount++;
+                    $errors[] = "Baris $rowNum: Lomba tidak valid untuk peserta '" . substr($nama, 0, 20) . "'.";
+                    continue;
+                }
+
+                // Cegah crash SQL panjang karena kolom di form Google 
+                // bisa berisi puluhan nama anggota yang dipisah koma. (Limit ke 250 chars)
+                if (strlen($nama) > 250) {
+                    $nama = substr($nama, 0, 247) . '...';
+                }
+
+                // SMART DUPLICATE CHECK WITHIN FILE
+                $newNamaAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $nama));
+                $newSekolahAlpha = preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $sekolah));
+                $identityKey = $newNamaAlpha . '|' . $newSekolahAlpha . '|' . $foundLombaId;
+
+                if (isset($seenInCurrentFile[$identityKey])) {
+                    $skipCount++;
+                    $errors[] = "Baris $rowNum: Duplikat dalam file csv/xlsx saat ini ('" . substr($nama, 0, 20) . "').";
+                    continue;
+                }
+
+                // CHECK DATABASE
+                if (!isset($lombaPendaftaransCache[$foundLombaId])) {
+                    $lombaPendaftaransCache[$foundLombaId] = \App\Models\Pendaftaran::where('lomba_id', $foundLombaId)->get(['nama', 'sekolah', 'email', 'no_wa', 'nama_pembina', 'no_hp_pembina']);
+                }
+
+                $existing = false;
+                $newDataForCheck = [
+                    'nama' => $nama,
+                    'sekolah' => $sekolah,
+                    'email' => $email,
+                    'no_wa' => $no_wa,
+                    'nama_pembina' => $nama_pembina,
+                ];
+
+                foreach ($lombaPendaftaransCache[$foundLombaId] as $dbRecord) {
+                    if (empty($dbRecord->nama)) continue;
+                    
+                    $dbRecordArray = $dbRecord->toArray();
+                    if (DuplicateCheckerService::isDuplicateForImport($newDataForCheck, $dbRecordArray)) {
+                        $existing = true;
+                        break;
+                    }
+                }
+
                 if ($existing) {
                     $skipCount++;
-                    $errors[] = "Baris $rowNum: Duplikat '{$pendaftarData['nama']}' dari {$pendaftarData['sekolah']} ($foundLombaId). Skip.";
-                    $errorDetails[] = [
-                        'row' => $rowNum,
-                        'reason' => 'Duplikat',
-                        'preview' => $pendaftarData['nama'] . ' | ' . $pendaftarData['sekolah'] . ' | lomba_id=' . $foundLombaId,
-                    ];
+                    $errors[] = "Baris $rowNum: Data duplikat ditemukan di database ('" . substr($nama, 0, 20) . "').";
                     $seenInCurrentFile[$identityKey] = true;
                     continue;
                 }
 
-                $createdAt = $parseImportedTimestamp($pendaftarData['tanggal']);
-                if ($createdAt->greaterThan(now())) {
-                    $createdAt = now();
+                // AUTO-FILL MISSING DATA DARI DB ATAU DARI DB RECORD DALAM ROW SAMA
+                if ($sekolah === '-' || empty($email) || empty($no_wa) || empty($nama_pembina)) {
+                    $reference = null;
+                    
+                    // Coba cari referensi berdasarkan Sekolah Murni
+                    if ($sekolah !== '-') {
+                        $reference = \App\Models\Pendaftaran::where('sekolah', $sekolah)->whereNotNull('no_wa')->where('no_wa', '!=', '-')->orderBy('created_at', 'desc')->first();
+                    }
+                    // Jika belum ketemu, coba cari lewat Pembina
+                    if (!$reference && !empty($no_hp_pembina) && $no_hp_pembina !== '-') {
+                        $reference = \App\Models\Pendaftaran::where('no_hp_pembina', $no_hp_pembina)->where('sekolah', '!=', '-')->first();
+                    }
+                    
+                    if ($reference) {
+                        if ($sekolah === '-') $sekolah = $reference->sekolah;
+                        if (empty($email) || $email === '-') $email = $reference->email;
+                        if (empty($no_wa) || $no_wa === '-') $no_wa = $reference->no_wa;
+                        if (empty($nama_pembina) || $nama_pembina === '-') $nama_pembina = $reference->nama_pembina;
+                        if (empty($no_hp_pembina) || $no_hp_pembina === '-') $no_hp_pembina = $reference->no_hp_pembina;
+                    } else {
+                        // Tidak ada samasekali referensi, fallback ke strip.
+                        if (empty($email)) $email = '-';
+                        if (empty($no_wa)) $no_wa = '-';
+                        if (empty($nama_pembina)) $nama_pembina = '-';
+                        if (empty($no_hp_pembina)) $no_hp_pembina = '-';
+                    }
                 }
 
-                DB::transaction(function () use ($pendaftarData, $foundLombaId, $batchId, $createdAt) {
-                    \App\Models\Pendaftaran::create([
-                        'nama' => $pendaftarData['nama'],
-                        'email' => $pendaftarData['email'],
-                        'no_wa' => $pendaftarData['no_wa'],
-                        'sekolah' => $pendaftarData['sekolah'],
-                        'lomba_id' => $foundLombaId,
-                        'nama_pembina' => $pendaftarData['nama_pembina'],
-                        'no_hp_pembina' => $pendaftarData['no_hp_pembina'],
-                        'status' => $pendaftarData['status'],
-                        'metode_pembayaran' => $pendaftarData['metode_pembayaran'],
-                        'import_batch' => $batchId,
-                        'created_at' => $createdAt,
-                        'updated_at' => $createdAt,
-                    ]);
+                // Terakhir: Jika No WA Peserta masih kosong, pinjam No HP Pembina.
+                // Sangat umum untuk lomba tim dimana hanya HP Pembina yg ditanyakan di Google Form.
+                if (($no_wa === '' || $no_wa === '-') && $no_hp_pembina !== '-' && $no_hp_pembina !== '') {
+                    $no_wa = $no_hp_pembina;
+                }
 
-                    // Do not overwrite existing participant data; only create if missing.
-                    \App\Models\Participant::firstOrCreate(
-                        [
-                            'nama' => $pendaftarData['nama'],
-                            'sekolah' => $pendaftarData['sekolah'],
+                $createdAt = $parseImportedTimestamp($globalTanggal);
+                if ($createdAt->greaterThan(now())) $createdAt = now();
+
+                try {
+                    DB::transaction(function () use ($nama, $email, $no_wa, $sekolah, $foundLombaId, $nama_pembina, $no_hp_pembina, $globalStatus, $globalPembayaran, $batchId, $createdAt) {
+                        \App\Models\Pendaftaran::create([
+                            'nama' => $nama,
+                            'email' => $email,
+                            'no_wa' => $no_wa,
+                            'sekolah' => $sekolah,
                             'lomba_id' => $foundLombaId,
-                        ],
-                        [
-                            'source' => 'import',
+                            'nama_pembina' => $nama_pembina,
+                            'no_hp_pembina' => $no_hp_pembina,
+                            'status' => $globalStatus,
+                            'metode_pembayaran' => $globalPembayaran,
                             'import_batch' => $batchId,
                             'created_at' => $createdAt,
                             'updated_at' => $createdAt,
-                        ]
-                    );
-                });
+                        ]);
 
-                $seenInCurrentFile[$identityKey] = true;
-                $successCount++;
-            } catch (\Throwable $e) {
-                \Log::error("Import error baris $rowNum: " . $e->getMessage());
-                $skipCount++;
-                $errors[] = "Baris $rowNum: " . $e->getMessage();
-                $preview = implode(' | ', array_filter(array_map(fn($v) => trim((string) $v), array_slice($data, 0, 5))));
-                $errorDetails[] = [
-                    'row' => $rowNum,
-                    'reason' => $e->getMessage(),
-                    'preview' => $preview,
-                ];
+                        \App\Models\Participant::firstOrCreate(
+                            ['nama' => $nama, 'sekolah' => $sekolah, 'lomba_id' => $foundLombaId],
+                            ['source' => 'import', 'import_batch' => $batchId, 'created_at' => $createdAt, 'updated_at' => $createdAt]
+                        );
+                    });
+
+                    $seenInCurrentFile[$identityKey] = true;
+                    $successCount++;
+                } catch (\Throwable $e) {
+                    \Log::error("Import error baris $rowNum: " . $e->getMessage());
+                    $skipCount++;
+                    $errors[] = "Baris $rowNum: " . $e->getMessage();
+                }
             }
         }
 
-        fclose($handle);
-
-        // Persist per-batch import report for audit.
+        // --- 5. FINISHING ---
         $report = [
             'batch_id' => $batchId,
             'generated_at' => now()->toDateTimeString(),
             'success_count' => $successCount,
             'skip_count' => $skipCount,
             'total_processed' => $successCount + $skipCount,
-            'error_details' => $errorDetails,
+            'error_details' => $errors,
         ];
 
-        Storage::disk('local')->put(
-            "import-reports/{$batchId}.json",
-            json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
-
+        Storage::disk('local')->put("import-reports/{$batchId}.json", json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         $reportPath = "storage/app/private/import-reports/{$batchId}.json";
 
         if ($successCount == 0) {
-            $errorMsg = "Gagal mengimpor. $skipCount data dilewati.";
-            if (!empty($errors)) {
-                $errorMsg .= " Detail: " . implode(' | ', array_slice($errors, 0, 3));
-            }
-            $errorMsg .= " Laporan: {$reportPath}";
-            return back()->with('error', $errorMsg);
+            $msg = "Gagal mengimpor. $skipCount data dilewati.";
+            if (!empty($errors)) $msg .= " Detail: " . implode(' | ', array_slice($errors, 0, 3));
+            return back()->with('error', $msg);
         }
+
+        AuditLog::log('import_participants', "Import peserta: $successCount berhasil, $skipCount dilewati.", null, [
+            'batch_id' => $batchId,
+            'success' => $successCount,
+            'skipped' => $skipCount,
+        ]);
 
         $msg = "Berhasil mengimpor $successCount peserta.";
         if ($skipCount > 0) {
-            $msg .= " ($skipCount dilewati";
-            if (!empty($errors)) {
-                $msg .= ": " . implode(' | ', array_slice($errors, 0, 3));
-            }
-            $msg .= ")";
+            $msg .= " ($skipCount dilewati: " . implode(' | ', array_slice($errors, 0, 2)) . "...)";
         }
-
-        $msg .= " Laporan: {$reportPath}";
         return back()->with('success', $msg);
     }
 
     public function rollback()
     {
-        // Try to get latest batch from Pendaftaran first
-        $lastBatch = \App\Models\Pendaftaran::whereNotNull('import_batch')
-            ->orderBy('id', 'desc')
-            ->first();
+        $lastBatch = \App\Models\Pendaftaran::whereNotNull('import_batch')->orderBy('id', 'desc')->first() 
+            ?? \App\Models\Participant::whereNotNull('import_batch')->where('source', 'import')->orderBy('id', 'desc')->first();
 
-        // If not found, try from Participant (sometimes data might only exists there)
-        if (!$lastBatch) {
-            $lastBatch = \App\Models\Participant::whereNotNull('import_batch')
-                ->where('source', 'import')
-                ->orderBy('id', 'desc')
-                ->first();
-        }
-
-        if (!$lastBatch) {
-            return back()->with('error', 'Tidak ada data import yang bisa di-rollback.');
-        }
-
+        if (!$lastBatch) return back()->with('error', 'Tidak ada data import yang bisa di-rollback.');
+        
         $batchId = $lastBatch->import_batch;
         $countPendaftaran = \App\Models\Pendaftaran::where('import_batch', $batchId)->delete();
-        $countParticipants = \App\Models\Participant::where('import_batch', $batchId)
-            ->where('source', 'import')
-            ->delete();
+        $countParticipants = \App\Models\Participant::where('import_batch', $batchId)->where('source', 'import')->delete();
 
-        return back()->with('success', "Rollback berhasil! Menghapus $countPendaftaran data pendaftaran dan $countParticipants data voting dari sesi import terakhir ($batchId).");
+        AuditLog::log('rollback_import', "Rollback import batch $batchId: $countPendaftaran pendaftar, $countParticipants participant.");
+
+        return back()->with('success', "Rollback berhasil! Menghapus $countPendaftaran data pendaftar & voting ($batchId).");
     }
 }

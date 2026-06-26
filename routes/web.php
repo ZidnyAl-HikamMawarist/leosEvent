@@ -26,14 +26,14 @@ Route::post('/pendaftaran', [PageController::class, 'storePendaftaran'])->name('
 Route::get('/kontak', [PageController::class, 'kontak'])->name('kontak');
 Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 Route::post('/support-message', [\App\Http\Controllers\User\SupportMessageController::class, 'store'])->name('support-message.store');
-Route::post('/vote', [\App\Http\Controllers\User\VoteController::class, 'vote'])->name('vote.store');
+Route::post('/vote', [\App\Http\Controllers\User\VoteController::class, 'vote'])->name('vote.store')->middleware('throttle:10,1');
 
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES (PROTECTED)
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('admin.dashboard');

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Setting;
 
 class ViewServiceProvider extends ServiceProvider
@@ -22,7 +23,10 @@ class ViewServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('*', function ($view) {
-            $setting = Setting::first();
+            // Cache setting selama 1 jam untuk menghindari query berulang
+            $setting = Cache::remember('app_setting', 3600, function () {
+                return Setting::first();
+            });
 
             if ($setting && $setting->auto_update_status && $setting->event_start && $setting->event_end) {
                 $now = now();
@@ -41,6 +45,8 @@ class ViewServiceProvider extends ServiceProvider
 
                 if ($newStatus !== $setting->event_status) {
                     $setting->update(['event_status' => $newStatus]);
+                    // Invalidate cache karena status berubah
+                    Cache::forget('app_setting');
                 }
             }
 

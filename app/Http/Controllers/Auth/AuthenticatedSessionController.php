@@ -21,10 +21,21 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * Hanya admin yang login. Jika akun bukan admin, langsung tolak dan logout.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        // Cek role SEBELUM regenerate session
+        if (!$request->user()->isAdmin()) {
+            // Logout paksa + tolak akses
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect('/login')->with('error', 'Akun ini tidak memiliki akses admin. Hubungi superadmin.');
+        }
 
         $request->session()->regenerate();
 

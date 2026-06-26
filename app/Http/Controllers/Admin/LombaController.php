@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreLombaRequest;
+use App\Http\Requests\UpdateLombaRequest;
 use App\Models\Lomba;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -41,24 +44,9 @@ class LombaController extends Controller
         return view('layouts.admin.lomba.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreLombaRequest $request)
     {
-        $data = $request->validate([
-            'nama_lomba' => 'required|string|max:255',
-            'tanggal_pelaksanaan' => 'required|date',
-            'deskripsi' => 'required',
-            'poster' => 'required|image|mimes:jpg,png,jpeg|max:2048',
-            'event_year' => 'required|digits:4',
-            'lokasi' => 'nullable|string',
-            'harga_tiket' => 'nullable|numeric',
-            'juklak_juknis_link' => 'nullable|url',
-            'event_start' => 'nullable|date_format:H:i',
-            'event_end' => 'nullable|date_format:H:i',
-            'is_save_the_date_active' => 'nullable|boolean',
-            'tipe_lomba' => 'required|in:solo,kelompok',
-            'whatsapp_panitia' => 'nullable|string',
-            'link_grup_wa' => 'nullable|url'
-        ]);
+        $data = $request->validated();
 
         $data['slug'] = Str::slug($request->nama_lomba) . '-' . Str::random(5);
         $data['status'] = 'aktif';
@@ -71,6 +59,8 @@ class LombaController extends Controller
 
         Lomba::create($data);
 
+        AuditLog::log('create_lomba', "Membuat lomba baru: {$data['nama_lomba']}");
+
         return redirect()->route('lomba.index')->with('success', 'Lomba berhasil ditambahkan');
     }
 
@@ -79,28 +69,9 @@ class LombaController extends Controller
         return view('layouts.admin.lomba.edit', compact('lomba'));
     }
 
-    public function update(Request $request, Lomba $lomba)
+    public function update(UpdateLombaRequest $request, Lomba $lomba)
     {
-        $data = $request->validate([
-            'nama_lomba' => 'required|string|max:255',
-            'tanggal_pelaksanaan' => 'required|date',
-            'deskripsi' => 'required',
-            'status' => 'required|in:aktif,nonaktif',
-            'poster' => 'nullable|image|mimes:jpg,png,jpeg|max:2048',
-            'event_year' => 'required|digits:4',
-            'lokasi' => 'nullable|string',
-            'harga_tiket' => 'nullable|numeric',
-            'juklak_juknis_link' => 'nullable|url',
-            'event_start' => 'nullable|date_format:H:i',
-            'event_end' => 'nullable|date_format:H:i',
-            'is_save_the_date_active' => 'nullable|boolean',
-            'juara_1' => 'nullable|string|max:255',
-            'juara_2' => 'nullable|string|max:255',
-            'juara_3' => 'nullable|string|max:255',
-            'tipe_lomba' => 'required|in:solo,kelompok',
-            'whatsapp_panitia' => 'nullable|string',
-            'link_grup_wa' => 'nullable|url'
-        ]);
+        $data = $request->validated();
 
         if ($lomba->nama_lomba !== $request->nama_lomba) {
             $data['slug'] = Str::slug($request->nama_lomba) . '-' . Str::random(5);
@@ -117,15 +88,21 @@ class LombaController extends Controller
 
         $lomba->update($data);
 
+        AuditLog::log('update_lomba', "Mengupdate lomba: {$lomba->nama_lomba}", $lomba);
+
         return redirect()->route('lomba.index')->with('success', 'Lomba berhasil diupdate');
     }
 
     public function destroy(Lomba $lomba)
     {
+        $nama = $lomba->nama_lomba;
         if ($lomba->poster && \Illuminate\Support\Facades\Storage::exists('public/' . $lomba->poster)) {
             \Illuminate\Support\Facades\Storage::delete('public/' . $lomba->poster);
         }
         $lomba->delete();
+
+        AuditLog::log('delete_lomba', "Menghapus lomba: {$nama}", $lomba);
+
         return back()->with('success', 'Lomba dihapus');
     }
 

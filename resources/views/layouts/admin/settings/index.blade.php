@@ -117,6 +117,19 @@
                             <label class="form-check-label fw-semibold" for="auto_update_status">Update Status
                                 Otomatis</label>
                         </div>
+
+                        @if(auth()->user()->isSuperAdmin())
+                            <div class="border-top pt-3 mt-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_maintenance"
+                                        id="is_maintenance" {{ ($setting->is_maintenance ?? false) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold text-danger" for="is_maintenance">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> AKTIFKAN MAINTENANCE MODE
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">Jika diaktifkan, pengunjung umum akan melihat halaman "Sedang Dalam Pengembangan". Hanya Anda yang tetap bisa melihat website.</small>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
