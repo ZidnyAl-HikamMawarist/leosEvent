@@ -101,7 +101,7 @@
 
                                 <div class="col-md-12">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2">Pilih Mata Lomba</label>
+                                        <label class="form-label mb-2" for="lomba_select">Pilih Mata Lomba</label>
                                         <select name="lomba_id" id="lomba_select" class="form-select glass-input-field" required>
                                             <option value="" disabled {{ !isset($selectedLomba) ? 'selected' : '' }}>-- Pilih Lomba --</option>
                                             @foreach($lombas as $l)
@@ -120,32 +120,32 @@
 
                                 <div class="col-md-12">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2" id="label_nama">Nama Peserta</label>
-                                        <input type="text" name="nama" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_nama" id="label_nama">Nama Peserta</label>
+                                        <input type="text" id="input_nama" name="nama" class="form-control glass-input-field"
                                             placeholder="Masukkan nama lengkap" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-12">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2">Asal Sekolah</label>
-                                        <input type="text" name="sekolah" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_sekolah">Asal Sekolah</label>
+                                        <input type="text" id="input_sekolah" name="sekolah" class="form-control glass-input-field"
                                             placeholder="Contoh: SMP Negeri 1 Jakarta" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2" id="label_email">Email Peserta</label>
-                                        <input type="email" name="email" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_email" id="label_email">Email Peserta</label>
+                                        <input type="email" id="input_email" name="email" class="form-control glass-input-field"
                                             placeholder="email@anda.com" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2" id="label_no_wa">No. HP / WhatsApp Peserta</label>
-                                        <input type="text" name="no_wa" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_no_wa" id="label_no_wa">No. HP / WhatsApp Peserta</label>
+                                        <input type="text" id="input_no_wa" name="no_wa" class="form-control glass-input-field"
                                             placeholder="Contoh: 08123456789" required>
                                     </div>
                                 </div>
@@ -153,23 +153,23 @@
                                 <!-- Common Fields for both Solo and Kelompok -->
                                 <div class="col-md-6">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2">Nama Pembina</label>
-                                        <input type="text" name="nama_pembina" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_nama_pembina">Nama Pembina</label>
+                                        <input type="text" id="input_nama_pembina" name="nama_pembina" class="form-control glass-input-field"
                                             placeholder="Masukkan nama pembina" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2">No. HP Pembina</label>
-                                        <input type="text" name="no_hp_pembina" class="form-control glass-input-field"
+                                        <label class="form-label mb-2" for="input_no_hp_pembina">No. HP Pembina</label>
+                                        <input type="text" id="input_no_hp_pembina" name="no_hp_pembina" class="form-control glass-input-field"
                                             placeholder="Contoh: 08123456789" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-12">
                                     <div class="glass-input-group">
-                                        <label class="form-label mb-2">Metode Pembayaran</label>
+                                        <label class="form-label mb-2" for="pembayaran_select">Metode Pembayaran</label>
                                         <select name="metode_pembayaran" id="pembayaran_select" class="form-select glass-input-field" required>
                                             <option value="transfer">TRANSFER</option>
                                             <option value="tunai">TUNAI (Pada saat Technical Meeting)</option>

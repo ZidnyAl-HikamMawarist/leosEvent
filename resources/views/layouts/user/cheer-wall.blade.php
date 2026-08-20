@@ -87,12 +87,12 @@
                 @csrf
                 <div class="modal-body px-4 pb-5 pt-4">
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small">Nama Kamu</label>
-                        <input type="text" name="nama" class="form-control glass-input-field" placeholder="Ketik namamu..." required>
+                        <label class="form-label text-white-50 small" for="cheer_nama">Nama Kamu</label>
+                        <input type="text" id="cheer_nama" name="nama" class="form-control glass-input-field" placeholder="Ketik namamu..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small">Dukungan Untuk (Opsional)</label>
-                        <select name="lomba_id" class="form-select glass-input-field">
+                        <label class="form-label text-white-50 small" for="cheer_lomba">Dukungan Untuk (Opsional)</label>
+                        <select id="cheer_lomba" name="lomba_id" class="form-select glass-input-field">
                             <option value="">Semua Mata Lomba</option>
                             @foreach($lombas as $l)
                                 <option value="{{ $l->id }}">{{ $l->nama_lomba }}</option>
@@ -100,8 +100,8 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small">Pesan Semangat (Max 300 Karakter)</label>
-                        <textarea name="pesan" class="form-control glass-input-field" rows="3" placeholder="Contoh: Semangat buat tim futsal SMKN 1 Ciamis! Juara! 🔥" maxlength="300" required></textarea>
+                        <label class="form-label text-white-50 small" for="cheer_pesan">Pesan Semangat (Max 300 Karakter)</label>
+                        <textarea id="cheer_pesan" name="pesan" class="form-control glass-input-field" rows="3" placeholder="Contoh: Semangat buat tim futsal SMKN 1 Ciamis! Juara! 🔥" maxlength="300" required></textarea>
                     </div>
                     <div class="d-grid mt-4">
                         <button type="submit" class="btn btn-primary-custom rounded-pill py-3 fw-bold">

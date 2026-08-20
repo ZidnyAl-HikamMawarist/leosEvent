@@ -8,6 +8,11 @@
         @yield('title'){{ isset($__env->getSections()['title']) ? ' | ' : '' }}{{ $setting->nama_event ?? 'LEOS EVENT' }}
     </title>
 
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@yield('meta_description', $setting->meta_description ?? 'Platform pendaftaran dan informasi kompetisi resmi — ' . ($setting->nama_event ?? 'LEOS EVENT') . '. Daftarkan dirimu sekarang!')">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+    @yield('meta')
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -320,6 +325,11 @@
 
     <!-- Main Content -->
     <main>
+        {{-- Visually-hidden H1 for SEO & screen readers.
+             This guarantees every page has a page-level heading.
+             Visible <h1> elements in page content act as section headings. --}}
+        <h1 class="visually-hidden">{{ $setting->nama_event ?? 'LEOS EVENT' }}</h1>
+
         @yield('content')
     </main>
 

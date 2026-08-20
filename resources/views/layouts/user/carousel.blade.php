@@ -3,18 +3,18 @@
         <!-- Corner Decorations -->
         <div class="carousel-corner-decor">
             @if(isset($setting) && $setting->side_image_left)
-                <img src="{{ asset('storage/' . $setting->side_image_left) }}" class="corner-decor corner-left" alt="">
+                <img src="{{ asset('storage/' . $setting->side_image_left) }}" class="corner-decor corner-left" alt="" aria-hidden="true" role="presentation">
             @endif
             @if(isset($setting) && $setting->side_image_right)
-                <img src="{{ asset('storage/' . $setting->side_image_right) }}" class="corner-decor corner-right" alt="">
+                <img src="{{ asset('storage/' . $setting->side_image_right) }}" class="corner-decor corner-right" alt="" aria-hidden="true" role="presentation">
             @endif
             @if(isset($setting) && $setting->side_image_left_bottom)
                 <img src="{{ asset('storage/' . $setting->side_image_left_bottom) }}" class="corner-decor corner-left-bottom"
-                    alt="">
+                    alt="" aria-hidden="true" role="presentation">
             @endif
             @if(isset($setting) && $setting->side_image_right_bottom)
                 <img src="{{ asset('storage/' . $setting->side_image_right_bottom) }}" class="corner-decor corner-right-bottom"
-                    alt="">
+                    alt="" aria-hidden="true" role="presentation">
             @endif
         </div>
 
