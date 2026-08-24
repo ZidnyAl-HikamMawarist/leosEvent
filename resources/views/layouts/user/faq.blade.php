@@ -34,15 +34,14 @@
                                     data-bs-toggle="collapse" data-bs-target="#faq{{ $i }}"
                                     aria-expanded="{{ $i == 0 ? 'true' : 'false' }}">
                                     <div class="d-flex align-items-center gap-3">
-                                        <span
-                                            class="bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1 small fw-bold">0{{ $i + 1 }}</span>
-                                        {{ $faq->pertanyaan }}
+                                        <span class="faq-number-badge rounded-pill px-2.5 py-1 small fw-bold">0{{ $i + 1 }}</span>
+                                        <span>{{ $faq->pertanyaan }}</span>
                                     </div>
                                 </button>
                             </h2>
                             <div id="faq{{ $i }}" class="accordion-collapse collapse {{ $i == 0 ? 'show' : '' }}"
                                 data-bs-parent="#accordionFAQ">
-                                <div class="accordion-body text-muted border-top border-white border-opacity-5">
+                                <div class="accordion-body text-muted border-top" style="border-color: var(--glass-border) !important;">
                                     <div class="ps-3 border-start border-primary border-opacity-50">
                                         {{ $faq->jawaban }}
                                     </div>

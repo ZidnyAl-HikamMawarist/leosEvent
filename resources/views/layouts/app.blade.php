@@ -31,41 +31,186 @@
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
+    @php
+        $bgHex = $setting->background_color ?? '#0f0908';
+        $bgClean = ltrim($bgHex, '#');
+        if (strlen($bgClean) === 3) {
+            $bgClean = $bgClean[0].$bgClean[0].$bgClean[1].$bgClean[1].$bgClean[2].$bgClean[2];
+        }
+        $r = hexdec(substr($bgClean, 0, 2));
+        $g = hexdec(substr($bgClean, 2, 2));
+        $b = hexdec(substr($bgClean, 4, 2));
+        $isLightBg = ((0.299 * $r + 0.587 * $g + 0.114 * $b) / 255) > 0.55;
+    @endphp
+
     <style>
         :root {
-            --primary:
-                {{ $setting->primary_color ?? '#712f23' }}
-            ;
-            --text-on-primary:
-                {{ $setting->text_primary_color ?? '#ffffff' }}
-            ;
-            --secondary:
-                {{ $setting->secondary_color ?? '#c5a353' }}
-            ;
-            --text-on-secondary:
-                {{ $setting->text_secondary_color ?? '#ffffff' }}
-            ;
-            --accent:
-                {{ $setting->accent_color ?? '#d4af37' }}
-            ;
-            --text-main:
-                {{ $setting->body_text_color ?? '#fdf6f0' }}
-            ;
-            --primary-glow:
-                {{ $setting->primary_color ?? '#712f23' }}
-                80;
+            --primary: {{ $setting->primary_color ?? '#712f23' }};
+            --text-on-primary: {{ $setting->text_primary_color ?? '#ffffff' }};
+            --secondary: {{ $setting->secondary_color ?? '#c5a353' }};
+            --text-on-secondary: {{ $setting->text_secondary_color ?? '#ffffff' }};
+            --accent: {{ $setting->accent_color ?? '#d4af37' }};
+            --text-main: {{ $setting->body_text_color ?? ($isLightBg ? '#1e293b' : '#fdf6f0') }};
             --font-primary: 'Plus Jakarta Sans', sans-serif;
             --font-secondary: 'Outfit', sans-serif;
+            
             @if($setting && $setting->background_image)
                 --bg-page: url('{{ asset('storage/' . $setting->background_image) }}');
-                --bg-body: transparent;
-            @else --bg-page:
-                {{ $setting->background_color ?? '#0f0908' }}
-                ;
-                --bg-body:
-                    {{ $setting->background_color ?? '#0f0908' }}
-                ;
+                --bg-body: #0a0e17;
+            @else
+                --bg-page: {{ $setting->background_color ?? '#0f0908' }};
+                --bg-body: {{ $setting->background_color ?? '#0f0908' }};
             @endif
+
+            /* Dynamic Theme Harmonization (Cards, Glass, Surface, & Glows) */
+            --bg-card: color-mix(in srgb, var(--bg-body) 84%, white 16%);
+            --bg-card-hover: color-mix(in srgb, var(--bg-body) 72%, white 28%);
+            --glass: color-mix(in srgb, var(--bg-body) 78%, transparent);
+            --glass-border: color-mix(in srgb, var(--secondary) 25%, transparent);
+            --card-border: color-mix(in srgb, var(--primary) 30%, transparent);
+            --primary-glow: color-mix(in srgb, var(--primary) 50%, transparent);
+            --text-muted: color-mix(in srgb, var(--text-main) 65%, transparent);
+        }
+
+        @if($isLightBg)
+            /* Light Theme Automatic High-Contrast Mode */
+            body {
+                color: #1e293b !important;
+            }
+
+            h1, h2, h3, h4, h5, h6,
+            .text-white,
+            .display-4, .display-5, .display-6 {
+                color: #0f172a !important;
+            }
+
+            .text-white-50,
+            .text-muted {
+                color: #64748b !important;
+            }
+
+            .bg-glass {
+                background-color: rgba(255, 255, 255, 0.9) !important;
+                border-color: rgba(0, 0, 0, 0.08) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+            }
+
+            .premium-card {
+                background-color: #ffffff !important;
+                border-color: rgba(0, 0, 0, 0.08) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+            }
+
+            .premium-card:hover {
+                background-color: #f8fafc !important;
+                border-color: var(--primary) !important;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08) !important;
+            }
+
+            .section-tag {
+                background: color-mix(in srgb, var(--primary) 10%, white) !important;
+                border-color: color-mix(in srgb, var(--primary) 25%, transparent) !important;
+                color: var(--primary) !important;
+            }
+
+            .navbar {
+                background: #ffffff !important;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+            }
+
+            .nav-link {
+                color: #334155 !important;
+            }
+
+            .brand-text {
+                background: linear-gradient(to right, #0f172a, var(--primary)) !important;
+                -webkit-background-clip: text !important;
+                background-clip: text !important;
+                -webkit-text-fill-color: transparent !important;
+            }
+
+            .glass-input-field {
+                background: rgba(0, 0, 0, 0.03) !important;
+                border-color: rgba(0, 0, 0, 0.12) !important;
+                color: #0f172a !important;
+            }
+
+            .glass-input-field::placeholder {
+                color: #94a3b8 !important;
+            }
+
+            .btn-outline-custom {
+                border-color: rgba(0, 0, 0, 0.15) !important;
+                background: rgba(0, 0, 0, 0.04) !important;
+                color: #0f172a !important;
+            }
+
+            .btn-outline-custom:hover {
+                background: rgba(0, 0, 0, 0.08) !important;
+                border-color: #0f172a !important;
+                color: #0f172a !important;
+            }
+        @endif
+
+        /* Dynamic FAQ Component */
+        .faq-premium .accordion-item {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--glass-border) !important;
+        }
+
+        .faq-premium .accordion-button {
+            color: var(--text-main) !important;
+            background-color: transparent !important;
+        }
+
+        .faq-premium .accordion-button:not(.collapsed) {
+            color: var(--primary) !important;
+            background-color: color-mix(in srgb, var(--primary) 8%, transparent) !important;
+        }
+
+        .faq-number-badge {
+            background-color: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+            color: var(--primary) !important;
+            border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent) !important;
+        }
+
+        /* Cohesive Component Styling */
+        .bg-glass {
+            background-color: var(--glass) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .premium-card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--glass-border) !important;
+        }
+
+        .premium-card:hover {
+            background-color: var(--bg-card-hover) !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 20px 40px -10px var(--primary-glow) !important;
+        }
+
+        .hero-overlay {
+            background: radial-gradient(circle at top right, color-mix(in srgb, var(--secondary) 15%, transparent), transparent 45%),
+                        radial-gradient(circle at bottom left, color-mix(in srgb, var(--primary) 20%, transparent), transparent 45%),
+                        linear-gradient(to bottom, color-mix(in srgb, var(--bg-body) 80%, transparent), var(--bg-body)) !important;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+            box-shadow: 0 10px 25px -5px var(--primary-glow) !important;
+            color: var(--text-on-primary) !important;
+        }
+
+        .btn-primary-custom:hover {
+            box-shadow: 0 15px 35px -5px var(--primary-glow) !important;
+            color: var(--text-on-primary) !important;
+        }
+
+        .divider-gradient {
+            background: linear-gradient(to right, var(--primary), var(--secondary)) !important;
         }
 
         /* Anti-Blue & Theme Sync */

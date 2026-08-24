@@ -26,7 +26,7 @@
                 <div class="carousel-inner h-100">
                     @foreach($carousels as $key => $slide)
                         <div class="carousel-item h-100 {{ $key == 0 ? 'active' : '' }}"
-                            style="background: linear-gradient(rgba(15, 9, 8, 0.4), rgba(15, 9, 8, 0.7)), url('{{ asset('storage/' . $slide->gambar) }}') no-repeat center center; background-size: cover; position: relative;">
+                            style="background: linear-gradient(color-mix(in srgb, var(--bg-body) 40%, transparent), color-mix(in srgb, var(--bg-body) 70%, transparent)), url('{{ asset('storage/' . $slide->gambar) }}') no-repeat center center; background-size: cover; position: relative;">
                             <!-- Tambahkan position relative -->
 
                             <div class="container h-100 d-flex align-items-center">
@@ -252,7 +252,7 @@
         left: 0;
         width: 100%;
         height: 35%;
-        background: linear-gradient(to bottom, transparent, rgba(15, 9, 8, 0.85));
+        background: linear-gradient(to bottom, transparent, var(--bg-body));
         pointer-events: none;
         z-index: 1;
     }

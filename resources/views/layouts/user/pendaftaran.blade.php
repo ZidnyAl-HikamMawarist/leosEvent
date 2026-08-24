@@ -274,9 +274,9 @@
 
         /* Success Modal Styles */
         #successModal .modal-content {
-            background: rgba(15, 9, 8, 0.95);
+            background: color-mix(in srgb, var(--bg-body) 95%, black);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(197, 163, 83, 0.3);
+            border: 1px solid var(--glass-border);
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
         }
         
@@ -355,7 +355,7 @@
         <!-- Premium Error Modal -->
         <div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content rounded-5 p-2" style="background: rgba(15, 9, 8, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(220, 53, 69, 0.3); box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);">
+                <div class="modal-content rounded-5 p-2" style="background: color-mix(in srgb, var(--bg-body) 95%, black); backdrop-filter: blur(20px); border: 1px solid rgba(220, 53, 69, 0.3); box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);">
                     <div class="modal-header border-0 justify-content-end pb-0">
                         <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>

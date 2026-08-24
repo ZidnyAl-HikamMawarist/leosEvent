@@ -1,18 +1,28 @@
 <x-guest-layout>
+    @php
+        $setting = \App\Models\Setting::first();
+        $namaEvent = $setting->nama_event ?? "Leo's Competition";
+    @endphp
 
-    <!-- Branding -->
-    <div class="auth-brand">
-        <h1>Leo's Competition</h1>
-        <p>Masuk ke akun Anda untuk melanjutkan</p>
+    <!-- Header -->
+    <div class="auth-header">
+        <div class="auth-logo">
+            @if($setting && $setting->logo)
+                <img src="{{ asset('storage/' . $setting->logo) }}" alt="{{ $namaEvent }}">
+            @else
+                <i class="bi bi-layers-fill"></i>
+            @endif
+        </div>
+        <h1 class="auth-title">{{ $namaEvent }}</h1>
+        <p class="auth-subtitle">Masuk untuk mengakses dashboard admin</p>
     </div>
 
-    <!-- Card -->
+    <!-- Minimal Card -->
     <div class="auth-card">
 
-        <!-- Session Status -->
         @if (session('status'))
-            <div class="auth-status">
-                {{ session('status') }}
+            <div class="status-msg">
+                <i class="bi bi-info-circle me-1"></i> {{ session('status') }}
             </div>
         @endif
 
@@ -20,12 +30,14 @@
             @csrf
 
             <!-- Email -->
-            <div class="form-floating-group">
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                    autocomplete="username" placeholder="Email">
-                <label for="email">Email</label>
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <div class="input-wrap">
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
+                        autocomplete="username" placeholder="name@example.com" class="form-input">
+                </div>
                 @error('email')
-                    <div class="auth-error">
+                    <div class="form-error">
                         <i class="bi bi-exclamation-circle"></i>
                         <span>{{ $message }}</span>
                     </div>
@@ -33,18 +45,18 @@
             </div>
 
             <!-- Password -->
-            <div class="form-floating-group">
-                <div class="password-wrapper">
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-wrap">
                     <input id="password" type="password" name="password" required autocomplete="current-password"
-                        placeholder="Password">
-                    <button type="button" class="password-toggle" onclick="togglePassword()"
+                        placeholder="••••••••" class="form-input" style="padding-right: 2.75rem;">
+                    <button type="button" class="pw-toggle" onclick="togglePassword()"
                         aria-label="Toggle password visibility">
                         <i class="bi bi-eye-slash" id="toggleIcon"></i>
                     </button>
                 </div>
-                <label for="password">Password</label>
                 @error('password')
-                    <div class="auth-error">
+                    <div class="form-error">
                         <i class="bi bi-exclamation-circle"></i>
                         <span>{{ $message }}</span>
                     </div>
@@ -52,8 +64,8 @@
             </div>
 
             <!-- Remember & Forgot -->
-            <div class="auth-options">
-                <label class="remember-check">
+            <div class="form-options">
+                <label class="remember-label">
                     <input type="checkbox" name="remember" id="remember_me">
                     <span>Ingat saya</span>
                 </label>
@@ -66,24 +78,21 @@
             </div>
 
             <!-- Submit -->
-            <button type="submit" class="btn-auth" id="btnLogin">
+            <button type="submit" class="btn-submit" id="btnLogin">
                 <span class="btn-text">Masuk</span>
-                <span class="btn-loader">
-                    <span class="spinner"></span>
-                </span>
+                <span class="spinner-icon"></span>
             </button>
         </form>
     </div>
 
     <!-- Footer -->
     <div class="auth-footer">
-        <a href="{{ route('home') }}">
-            <i class="bi bi-arrow-left"></i> Kembali ke halaman utama
+        <a href="{{ route('home') }}" class="back-link">
+            <i class="bi bi-arrow-left"></i> Kembali ke Beranda
         </a>
     </div>
 
     <script>
-        // Password visibility toggle
         function togglePassword() {
             const input = document.getElementById('password');
             const icon = document.getElementById('toggleIcon');
@@ -96,31 +105,10 @@
             }
         }
 
-        // Loading state on form submit
         document.getElementById('loginForm').addEventListener('submit', function () {
-            document.getElementById('btnLogin').classList.add('loading');
+            const btn = document.getElementById('btnLogin');
+            btn.classList.add('loading');
+            btn.setAttribute('disabled', 'disabled');
         });
-
-        // Floating label fix for password field (nested inside password-wrapper)
-        (function () {
-            const pw = document.getElementById('password');
-            const label = pw.closest('.form-floating-group').querySelector('label');
-
-            function sync() {
-                const active = pw === document.activeElement || pw.value.length > 0;
-                label.style.top = active ? '0' : '50%';
-                label.style.transform = 'translateY(-50%)';
-                label.style.fontSize = active ? '0.7rem' : '0.88rem';
-                label.style.color = active ? 'var(--accent)' : 'var(--text-placeholder)';
-                label.style.letterSpacing = active ? '0.3px' : '0';
-                label.style.fontWeight = active ? '600' : '500';
-                label.style.background = active ? 'var(--bg-card)' : 'transparent';
-            }
-
-            pw.addEventListener('focus', sync);
-            pw.addEventListener('blur', sync);
-            pw.addEventListener('input', sync);
-        })();
     </script>
-
 </x-guest-layout>

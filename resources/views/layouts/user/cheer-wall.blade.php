@@ -78,7 +78,7 @@
 <!-- Cheer Modal -->
 <div class="modal fade" id="cheerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-glass border border-white border-opacity-10 rounded-5 p-2" style="background: rgba(15, 9, 8, 0.95); backdrop-filter: blur(20px);">
+        <div class="modal-content bg-glass border border-white border-opacity-10 rounded-5 p-2" style="background: color-mix(in srgb, var(--bg-body) 95%, black); backdrop-filter: blur(20px);">
             <div class="modal-header border-0 justify-content-between px-4 pt-4">
                 <h4 class="fw-bold text-white mb-0">Kirim Dukungan</h4>
                 <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>

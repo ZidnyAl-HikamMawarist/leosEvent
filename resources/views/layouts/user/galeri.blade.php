@@ -78,7 +78,7 @@
     .galeri-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(to top, rgba(15, 9, 8, 0.9) 0%, rgba(15, 9, 8, 0.4) 50%, rgba(15, 9, 8, 0) 100%);
+        background: linear-gradient(to top, color-mix(in srgb, var(--bg-body) 90%, transparent) 0%, color-mix(in srgb, var(--bg-body) 40%, transparent) 50%, transparent 100%);
         opacity: 0;
         transition: opacity 0.4s ease;
         display: flex;

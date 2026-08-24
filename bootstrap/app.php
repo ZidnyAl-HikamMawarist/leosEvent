@@ -13,6 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->redirectUsersTo(function () {
+            if (\Illuminate\Support\Facades\Auth::user()?->isAdmin()) {
+                return route('admin.dashboard');
+            }
+            return route('home');
+        });
+        $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->web(append: [
             \App\Http\Middleware\CheckMaintenanceMode::class,
         ]);

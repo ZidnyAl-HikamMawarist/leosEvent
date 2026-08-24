@@ -245,14 +245,15 @@
             .step-icon {
                 width: 100px;
                 height: 100px;
-                background: rgba(113, 47, 35, 0.1);
-                border: 2px solid rgba(113, 47, 35, 0.2);
+                background: color-mix(in srgb, var(--primary) 12%, transparent);
+                border: 2px solid color-mix(in srgb, var(--primary) 28%, transparent);
                 color: var(--primary);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 position: relative;
+                transition: all 0.4s ease;
             }
 
             .step-num {
@@ -260,7 +261,7 @@
                 top: -5px;
                 right: -5px;
                 background: var(--secondary);
-                color: white;
+                color: var(--text-on-secondary);
                 width: 35px;
                 height: 35px;
                 border-radius: 50%;
@@ -275,9 +276,8 @@
             .timeline-dot {
                 width: 50px;
                 height: 50px;
-                background: rgba(113, 47, 35, 0.1);
-                /* Based on --primary */
-                border: 1px solid rgba(113, 47, 35, 0.2);
+                background: color-mix(in srgb, var(--primary) 12%, transparent);
+                border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -312,7 +312,7 @@
                 }
 
                 .timeline-flow-wrapper {
-                    border-left: 2px solid rgba(113, 47, 35, 0.2);
+                    border-left: 2px solid color-mix(in srgb, var(--primary) 25%, transparent);
                     padding-left: 20px;
                 }
             }
