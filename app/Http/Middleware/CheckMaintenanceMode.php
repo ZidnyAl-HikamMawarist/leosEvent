@@ -20,8 +20,8 @@ class CheckMaintenanceMode
         $setting = Setting::first();
 
         if ($setting && $setting->is_maintenance) {
-            // Izinkan Superadmin melihat website apa pun
-            if (Auth::check() && Auth::user()->isSuperAdmin()) {
+            // Izinkan Admin dan Superadmin melihat website apa pun
+            if (Auth::check() && Auth::user()->isAdmin()) {
                 return $next($request);
             }
 

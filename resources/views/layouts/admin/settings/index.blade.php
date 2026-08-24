@@ -118,20 +118,26 @@
                                 Otomatis</label>
                         </div>
 
-                        @if(auth()->user()->isSuperAdmin())
+                        @if(auth()->user()->isAdmin())
                             <div class="border-top pt-3 mt-3">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="is_maintenance"
-                                        id="is_maintenance" {{ ($setting->is_maintenance ?? false) ? 'checked' : '' }}>
+                                        id="is_maintenance" value="1" {{ ($setting->is_maintenance ?? false) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-bold text-danger" for="is_maintenance">
                                         <i class="bi bi-exclamation-triangle-fill me-1"></i> AKTIFKAN MAINTENANCE MODE
                                     </label>
                                 </div>
-                <!-- Visual Elements -->
+                                <small class="text-muted d-block mt-1">Jika diaktifkan, pengunjung umum akan diarahkan ke halaman "Sedang Dalam Pengembangan (Maintenance)". Admin yang sedang login tetap dapat melihat website secara normal.</small>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Logo & Identitas Institusi (Kiri) -->
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4">
-                            <i class="bi bi-image text-primary me-2"></i>Elemen Visual & Navbar
+                            <i class="bi bi-shield-check text-primary me-2"></i>Logo & Identitas Sekolah
                         </h5>
 
                         <div class="row g-3 mb-3">
@@ -161,7 +167,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-3">
+                        <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Nama Sekolah</label>
                                 <input type="text" name="nama_sekolah" class="form-control"
@@ -171,46 +177,7 @@
                                 <label class="form-label fw-semibold">Teks Penyelenggara</label>
                                 <input type="text" name="organizer_text" class="form-control"
                                     value="{{ $setting->organizer_text ?? '' }}" placeholder="Contoh: Diselenggarakan di">
-                                <small class="text-muted" style="font-size: 11px;">Teks sebelum nama sekolah di footer.</small>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Teks Dinamis Navbar</label>
-                            <input type="text" name="navbar_element" class="form-control"
-                                value="{{ $setting->navbar_element ?? '' }}">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small">Gambar Atas</label>
-                                <input type="file" name="top_image" class="form-control">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold small">Gambar Footer</label>
-                                <input type="file" name="footer_image" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label fw-semibold small">Side Left (Atas)</label>
-                                <input type="file" name="side_image_left" class="form-control">
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label fw-semibold small">Side Right (Atas)</label>
-                                <input type="file" name="side_image_right" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label fw-semibold small">Side Left (Bawah)</label>
-                                <input type="file" name="side_image_left_bottom" class="form-control">
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label fw-semibold small">Side Right (Bawah)</label>
-                                <input type="file" name="side_image_right_bottom" class="form-control">
+                                <small class="text-muted">Teks sebelum nama sekolah di footer.</small>
                             </div>
                         </div>
                     </div>
@@ -515,6 +482,54 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                <!-- Elemen Visual Navbar & Hiasan Gambar (Kanan) -->
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">
+                            <i class="bi bi-image text-primary me-2"></i>Elemen Visual Navbar & Hiasan Gambar
+                        </h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Teks Dinamis Navbar</label>
+                            <input type="text" name="navbar_element" class="form-control"
+                                value="{{ $setting->navbar_element ?? '' }}" placeholder="Teks dinamis pada navbar...">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small">Gambar Atas</label>
+                                <input type="file" name="top_image" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold small">Gambar Footer</label>
+                                <input type="file" name="footer_image" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold small">Side Left (Atas)</label>
+                                <input type="file" name="side_image_left" class="form-control">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold small">Side Right (Atas)</label>
+                                <input type="file" name="side_image_right" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold small">Side Left (Bawah)</label>
+                                <input type="file" name="side_image_left_bottom" class="form-control">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold small">Side Right (Bawah)</label>
+                                <input type="file" name="side_image_right_bottom" class="form-control">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,17 +1,21 @@
+@php
+    $setting = \App\Models\Setting::first();
+    $namaEvent = $setting->nama_event ?? "Leo's Competition";
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance - Sedang Dalam Pengembangan</title>
+    <title>Sedang Dalam Pengembangan — {{ $namaEvent }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary: #4f46e5;
-            --secondary: #ec4899;
-            --bg: #0f172a;
+            --primary: {{ $setting->primary_color ?? '#712f23' }};
+            --secondary: {{ $setting->secondary_color ?? '#c5a353' }};
+            --bg: {{ $setting->background_color ?? '#0f0908' }};
         }
 
         body {
