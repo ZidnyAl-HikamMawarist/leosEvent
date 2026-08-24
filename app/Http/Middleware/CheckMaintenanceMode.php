@@ -25,8 +25,18 @@ class CheckMaintenanceMode
                 return $next($request);
             }
 
-            // Izinkan akses ke admin panel agar admin/superadmin bisa login untuk mematikannya
-            if ($request->is('admin*') || $request->is('login') || $request->is('logout') || $request->is('register')) {
+            // Izinkan akses ke admin panel, auth, dan file asset/media
+            if (
+                $request->is('admin*') ||
+                $request->is('login') ||
+                $request->is('logout') ||
+                $request->is('register') ||
+                $request->is('storage/*') ||
+                $request->is('css/*') ||
+                $request->is('js/*') ||
+                $request->is('images/*') ||
+                $request->is('favicon.ico')
+            ) {
                 return $next($request);
             }
 

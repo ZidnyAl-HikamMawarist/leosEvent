@@ -171,8 +171,8 @@ class PendaftaranController extends Controller
                 ucfirst($item->lomba->tipe_lomba ?? '-'),
                 $item->nama_pembina ?? '-',
                 $item->no_hp_pembina ?? '-',
-                strtoupper($item->metode_pembayaran),
-                $item->created_at->format('d M Y H:i')
+                strtoupper((string) $item->metode_pembayaran),
+                $item->created_at ? $item->created_at->format('d M Y H:i') : '-'
             ];
         }
 

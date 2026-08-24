@@ -153,10 +153,10 @@ class PageController extends Controller
 
         return redirect()->route('pendaftaran')->with([
             'success' => 'Pendaftaran berhasil dikirim! Silakan ikuti instruksi selanjutnya.',
-            'wa_panitia' => $lomba->whatsapp_panitia,
-            'link_grup' => $lomba->link_grup_wa,
+            'wa_panitia' => $lomba?->whatsapp_panitia,
+            'link_grup' => $lomba?->link_grup_wa,
             'metode_pembayaran' => $request->metode_pembayaran,
-            'nama_lomba' => $lomba->nama_lomba
+            'nama_lomba' => $lomba?->nama_lomba ?? 'Lomba'
         ]);
     }
 

@@ -62,26 +62,34 @@ class VoteController extends Controller
             return $this->errorResponse($request, 'Kamu sudah mencapai batas vote harian. Coba lagi besok! 🚫');
         }
 
-        // --- Layer 3: Simpan vote ---
-        Vote::create([
-            'participant_id' => $participantId,
-            'ip_address' => $ip,
-            'fingerprint' => $fingerprint,
-            'user_agent' => $userAgent,
-        ]);
+        // --- Layer 3: Simpan vote dalam database transaction ---
+        \Illuminate\Support\Facades\DB::transaction(function () use ($participantId, $ip, $fingerprint, $userAgent) {
+            Vote::create([
+                'participant_id' => $participantId,
+                'ip_address' => $ip,
+                'fingerprint' => $fingerprint,
+                'user_agent' => $userAgent,
+            ]);
+
+            $participant = Participant::lockForUpdate()->find($participantId);
+            if ($participant) {
+                $participant->increment('vote_count');
+            }
+        });
 
         $participant = Participant::find($participantId);
-        $participant->increment('vote_count');
+        $participantName = $participant ? $participant->nama : 'Peserta';
+        $newCount = $participant ? $participant->vote_count : 0;
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'status' => 'success',
-                'message' => "Terima kasih! Dukunganmu untuk {$participant->nama} sudah tercatat. 🚀",
-                'new_vote_count' => $participant->vote_count
+                'message' => "Terima kasih! Dukunganmu untuk {$participantName} sudah tercatat. 🚀",
+                'new_vote_count' => $newCount
             ]);
         }
 
-        return back()->with('success_vote', "Terima kasih! Dukunganmu untuk {$participant->nama} sudah tercatat. 🚀");
+        return back()->with('success_vote', "Terima kasih! Dukunganmu untuk {$participantName} sudah tercatat. 🚀");
     }
 
     /**
