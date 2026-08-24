@@ -6,6 +6,10 @@
     <title>@yield('title', 'Admin')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@yield('meta_description', 'Panel Pengaturan dan Administrasi leosEvent')">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -634,7 +638,7 @@
             <button class="mobile-btn" id="open-sidebar" title="Open Menu">
                 <i class="bi bi-list fs-5"></i>
             </button>
-            <h5 class="topbar-title">@yield('title', 'Admin Panel')</h5>
+            <span class="topbar-title">@yield('title', 'Admin Panel')</span>
         </div>
 
         <div class="d-flex align-items-center gap-3">

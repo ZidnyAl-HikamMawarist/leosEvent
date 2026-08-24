@@ -25,26 +25,22 @@ class SecurityHeaders
 
         // ── Content Security Policy ────────────────────────────────────────
         // Allow resources from self, trusted CDNs, and Google Fonts.
-        // Adjust the policy as your app evolves (e.g. add nonce for inline scripts).
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com",
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com",
-            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://npmcdn.com",
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com https://npmcdn.com",
+            "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
             "img-src 'self' data: blob: https:",
-            "connect-src 'self'",
-            "frame-ancestors 'none'",
+            "connect-src 'self' https:",
+            "frame-ancestors 'self'",
         ]);
         $response->headers->set('Content-Security-Policy', $csp);
 
         // ── HTTP Strict Transport Security ─────────────────────────────────
-        // Only set HSTS on HTTPS connections to avoid breaking local HTTP dev.
-        if ($request->secure()) {
-            $response->headers->set(
-                'Strict-Transport-Security',
-                'max-age=31536000; includeSubDomains'
-            );
-        }
+        $response->headers->set(
+            'Strict-Transport-Security',
+            'max-age=31536000; includeSubDomains; preload'
+        );
 
         // ── Clickjacking Protection ────────────────────────────────────────
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
@@ -52,8 +48,11 @@ class SecurityHeaders
         // ── MIME-Sniffing Protection ───────────────────────────────────────
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
-        // ── Referrer Policy (bonus hardening) ─────────────────────────────
+        // ── Referrer Policy ───────────────────────────────────────────────
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+        // ── Permissions Policy ────────────────────────────────────────────
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
         return $response;
     }
